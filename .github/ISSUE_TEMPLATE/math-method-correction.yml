@@ -5,8 +5,8 @@ body:
   - type: input
     id: method
     attributes:
-      label: 方法编号或学科代码
-      description: 例如 M026，或说明希望新增的条目。
+      label: 方法、结论、联系编号或学科代码
+      description: 例如 M026、C003、B002、MSC 28，或说明希望新增的条目。
     validations:
       required: true
   - type: textarea
@@ -30,6 +30,9 @@ body:
       options:
         - 表述或来源修正
         - 定理条件与结论核验
+        - 例算复现或反例
+        - 学科导读补充
+        - 独立同行审阅（请说明范围）
         - 已有跨领域应用
         - 待验证的迁移设想
         - 新方法或新方向

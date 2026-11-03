@@ -17,9 +17,10 @@
  function apply(writeUrl=true){
   const terms=normal(search.value.trim()).split(/\s+/).filter(Boolean);
   let n=0;
-  const ordered=[...cards].sort((a,b)=>sort.value==='name'?a.dataset.name.localeCompare(b.dataset.name,'zh-CN'):sort.value==='evidence'?(Number(b.dataset.checked)-Number(a.dataset.checked)||a.dataset.method.localeCompare(b.dataset.method)):sort.value==='id'?a.dataset.method.localeCompare(b.dataset.method):Number(a.dataset.order)-Number(b.dataset.order));
-  for(const card of ordered){const match=terms.every(t=>normal(card.dataset.search).includes(t))&&(!subject.value||card.dataset.subjects.split(';').includes(subject.value))&&(!problem.value||card.dataset.problem===problem.value)&&(!status.value||card.dataset.checked===(status.value==='checked'?'1':'0'));card.hidden=!match;if(match)n++;grid.appendChild(card)}
+  const ordered=[...cards].sort((a,b)=>sort.value==='name'?a.dataset.name.localeCompare(b.dataset.name,'zh-CN'):sort.value==='evidence'?(Number(b.dataset.claims)-Number(a.dataset.claims)||a.dataset.method.localeCompare(b.dataset.method)):sort.value==='id'?a.dataset.method.localeCompare(b.dataset.method):Number(a.dataset.order)-Number(b.dataset.order));
+  for(const card of ordered){const evidenceMatch=!status.value||(status.value==='case'&&Number(card.dataset.claims)>0)||(status.value==='text'&&card.dataset.text==='1')||(status.value==='pending'&&Number(card.dataset.claims)===0)||(status.value==='checked'&&card.dataset.checked==='1');const match=terms.every(t=>normal(card.dataset.search).includes(t))&&(!subject.value||card.dataset.subjects.split(';').includes(subject.value))&&(!problem.value||card.dataset.problem===problem.value)&&evidenceMatch;card.hidden=!match;if(match)n++;grid.appendChild(card)}
   count.textContent=String(n);empty.hidden=n!==0;grid.hidden=n===0;
+  const guide=document.querySelector('[data-subject-guide]');if(guide){guide.hidden=!subject.value;guide.href='./subjects/'+subject.value+'/index.html';guide.textContent='阅读 '+(subject.selectedOptions[0]?.textContent||'所选学科')+' 的学科页面';}
   if(writeUrl){const p=new URLSearchParams();for(const [name,value] of [['q',search.value.trim()],['subject',subject.value],['problem',problem.value],['status',status.value],['sort',sort.value]])if(value)p.set(name,value);history.replaceState(null,'',location.pathname+(p.size?'?'+p.toString():'')+location.hash)}
  }
  let debounce;search.addEventListener('input',()=>{clearTimeout(debounce);debounce=setTimeout(()=>apply(),100)});

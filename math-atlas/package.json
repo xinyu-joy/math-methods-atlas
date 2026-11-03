@@ -1,13 +1,15 @@
 {
   "name": "math-methods-atlas",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "按学科、问题和方法检索的数学方法地图",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node scripts/verify.mjs",
+    "test": "node scripts/verify.mjs && node scripts/verify-examples.mjs",
     "dev": "node scripts/serve.mjs"
   },
-  "engines": {"node": ">=22"}
+  "engines": {
+    "node": ">=22"
+  }
 }
