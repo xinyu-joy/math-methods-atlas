@@ -1,0 +1,37 @@
+name: 数学方法条目补充或纠错
+description: 为数学方法地图补充证据、纠正表述或提出待验证的迁移方向。
+title: '[数学方法] '
+body:
+  - type: input
+    id: method
+    attributes:
+      label: 方法编号或学科代码
+      description: 例如 M026，或说明希望新增的条目。
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: 建议修改的内容
+      description: 请说明现有表述、建议表述和原因。
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 文献与具体位置
+      description: 请提供原始论文或专著链接，以及定理编号、章节或页码。
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 补充类型
+      options:
+        - 表述或来源修正
+        - 定理条件与结论核验
+        - 已有跨领域应用
+        - 待验证的迁移设想
+        - 新方法或新方向
+    validations:
+      required: true
