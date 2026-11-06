@@ -1,0 +1,1167 @@
+{
+  "methods": [
+    {
+      "id": "D005",
+      "slug": "sos-gram",
+      "familyId": "M026",
+      "name": "固定多项式的 SOS–Gram 半正定证书",
+      "english": "SOS Gram matrix certificate for a fixed polynomial",
+      "aliases": [
+        "平方和分解",
+        "Gram 矩阵可行性",
+        "SOS membership via SDP"
+      ],
+      "subjects": [
+        "90",
+        "14"
+      ],
+      "problemTags": [
+        "非负性证书",
+        "半正定规划",
+        "全局优化下界",
+        "稳定性证书"
+      ],
+      "summary": "给定一个实多项式，本条目回答能否把它写成有限个实多项式的平方之和，并展示如何把这个代数问题变成半正定矩阵与系数等式的可行性问题。重点是证书到底证明了什么、单项式基如何选择、浮点结果怎样复核，以及为什么“求不到平方和”不能直接推出多项式取负值。通过一个具有连续族 Gram 矩阵的四次多项式，读者可以手算分解、核对特征值，再把同一结构迁移到优化下界或多项式动力系统。",
+      "keywords": [
+        {
+          "zh": "平方和",
+          "en": "sum of squares / SOS",
+          "type": "证书",
+          "definition": "存在有限个实多项式，其平方相加恰好等于目标多项式；每个平方非负，因而得到全空间非负性。"
+        },
+        {
+          "zh": "Gram 矩阵",
+          "en": "Gram matrix",
+          "type": "表示",
+          "definition": "相对选定多项式基 z，把目标写成 zᵀQz 的对称矩阵；同一多项式通常对应许多矩阵。"
+        },
+        {
+          "zh": "半正定",
+          "en": "positive semidefinite / PSD",
+          "type": "关键约束",
+          "definition": "实对称矩阵 Q 对所有实向量 v 满足 vᵀQv≥0，允许零特征值。"
+        },
+        {
+          "zh": "单项式基",
+          "en": "monomial basis",
+          "type": "建模对象",
+          "definition": "按固定顺序排列次数不超过 d 的所有单项式；一般情形不能任意删去可能需要的项。"
+        },
+        {
+          "zh": "系数匹配",
+          "en": "coefficient matching",
+          "type": "线性约束",
+          "definition": "展开 zᵀQz，要求每个单项式的系数等于目标系数，未出现的项也必须匹配为零。"
+        },
+        {
+          "zh": "半正定规划",
+          "en": "semidefinite programming / SDP",
+          "type": "计算方法",
+          "definition": "在线性等式、线性目标及半正定矩阵约束下求解；本条目首先是没有优化目标的可行性问题。"
+        },
+        {
+          "zh": "支撑集",
+          "en": "support",
+          "type": "结构信息",
+          "definition": "系数非零的单项式指数集合，可用来分析哪些基项真正必要。"
+        },
+        {
+          "zh": "Newton 多面体",
+          "en": "Newton polytope",
+          "type": "降维工具",
+          "definition": "支撑集的凸包；经适用定理证明后可删减平方因子的候选单项式。"
+        },
+        {
+          "zh": "严格可行",
+          "en": "strict feasibility",
+          "type": "数值条件",
+          "definition": "存在满足系数等式的正定 Gram 矩阵；正的谱裕量有利于数值扰动后的精确恢复。"
+        },
+        {
+          "zh": "有理证书",
+          "en": "rational certificate",
+          "type": "核验产物",
+          "definition": "用精确有理矩阵和因子关系表示证书，系数恒等与半正定性可以脱离求解器容差复核。"
+        },
+        {
+          "zh": "矩–平方和层级",
+          "en": "moment–SOS hierarchy",
+          "type": "延伸方法",
+          "definition": "对优化问题逐步提高松弛次数的系列 SDP；其收敛还需要问题集合与表示条件。"
+        },
+        {
+          "zh": "项稀疏性",
+          "en": "term sparsity",
+          "type": "研究结构",
+          "definition": "以单项式之间的关系组织矩阵块；不同于只观察哪些变量共同出现的相关稀疏性。"
+        }
+      ],
+      "prerequisites": {
+        "intuition": [
+          "多项式展开与恒等式",
+          "实对称矩阵及特征值",
+          "知道数值近似与精确等式的区别"
+        ],
+        "proof": [
+          "谱分解或矩阵平方根",
+          "多重指标与有限维线性映射",
+          "凸锥和半正定规划基本概念"
+        ]
+      },
+      "sections": [
+        {
+          "id": "problem",
+          "title": "要解决的具体问题",
+          "paragraphs": [
+            "输入是系数、变量和次数均已固定的实多项式，输出是可独立核对的平方和恒等式，或本次搜索的失败状态。只在有限样本上检查函数值，无法排除样本间出现负值；平方和证书则一次控制整个实空间。它适用于需要可靠下界或不等式保证的任务，而不仅是画出函数曲线。",
+            "首先区分三个问题：目标是否处处非负、是否属于多项式平方和锥、求解器是否找到了可信证书。第二个蕴含第一个，第三个还牵涉基、尺度和误差。本条目只把固定次数的第二个问题精确改写成矩阵可行性；一般受约束全局优化、最优点提取和层级收敛留给后续专条。"
+          ],
+          "sourceIds": [
+            "C101",
+            "C104"
+          ]
+        },
+        {
+          "id": "statement",
+          "title": "条件与精确结论",
+          "paragraphs": [
+            "设 $p\\in\\mathbb R[x_1,\\ldots,x_n]$，总次数不超过 $2d$，$z_d$ 按任意固定顺序列出次数不超过 $d$ 的全部单项式，长度为 $s=\\binom{n+d}{d}$。则 p 是实多项式平方和，当且仅当存在实对称半正定矩阵 Q，使 $p=z_d^TQz_d$ 成为多项式恒等式。没有省略基项、改变系数或仅在样本点匹配，是等价结论的关键。",
+            "矩阵元素是未知量。若基的指数为 β、γ，则每个 α 的条件是把所有满足 β+γ=α 的 Q 项相加，得到 $p_\\alpha$。对称矩阵的非对角项在展开中贡献两次。正定不是必要条件：在边界上的平方和往往只有奇异证书。"
+          ],
+          "sourceIds": [
+            "C101",
+            "C104"
+          ],
+          "formulas": [
+            "p=\\sum_k q_k^2\\quad\\Longleftrightarrow\\quad \\exists Q\\succeq0:\\ p=z_d^TQz_d",
+            "\\sum_{\\beta+\\gamma=\\alpha}Q_{\\beta\\gamma}=p_\\alpha\\quad (|\\alpha|\\leq 2d)"
+          ]
+        },
+        {
+          "id": "mechanism",
+          "title": "为什么矩阵证书有效",
+          "paragraphs": [
+            "两个方向都可以直接检验。若 Q 半正定，谱分解给出 Q=BᵀB，于是 zᵀQz 等于 Bz 各分量的平方之和。反过来，把每个平方因子写成基向量的线性组合 qₖ=cₖᵀz，便得到 Q=Σcₖcₖᵀ；任意向量 v 的二次型是 Σ(cₖᵀv)²，故 Q 半正定。",
+            "为什么平方因子无需超过 d 次？若有更高次数，取所有因子的最高次齐次部分，它们的平方和必须恒为零，才能消掉目标没有的最高次项。实数平方和处处为零迫使每一项为零，与最高次非零矛盾。这个理由依赖实系数，不能原样套到复数平方。系数映射一般有核，因此 Gram 矩阵不唯一；低秩只影响当前分解所用平方项数，不改变被证明的恒等式。"
+          ],
+          "sourceIds": [
+            "C101"
+          ]
+        },
+        {
+          "id": "workflow",
+          "title": "从多项式到可复核结果",
+          "paragraphs": [
+            "建模前先确定变量的物理单位和目标区域。若只需在区间或半代数集合上非负，直接要求全空间平方和可能过强；需要把区域约束纳入乘子证书，并另行检查次数和表示条件。这里的全基保证表示完整性，稀疏删减则必须有支撑结构依据。",
+            "数值求解返回的矩阵只是候选。应分别检查系数残差、对称性、最小特征值与使用的尺度。接近零的特征值不能靠显示位数判断符号；也不能随手把负特征值截为零，因为这样可能破坏系数等式。对有理输入，可尝试有理恢复并精确复核；严格可行时的恢复理论与边界情形应分别处理。"
+          ],
+          "sourceIds": [
+            "C101",
+            "C104"
+          ],
+          "steps": [
+            "固定次数与有序基，保留原始精确系数。",
+            "逐项构造系数线性方程，包含零系数方程。",
+            "求解半正定可行性，记录模型和求解容差。",
+            "用精确展开核对恒等式，并给出可核对的 PSD 分解。",
+            "保存证书、基顺序和失败原因，使别人可以复算。"
+          ]
+        },
+        {
+          "id": "example",
+          "title": "完整算例：同一个多项式的多种证书",
+          "paragraphs": [
+            "考虑 $p=x^4+4x^2y^2+y^4$。选齐次基 $z=(x^2,xy,y^2)^T$，展开后依次得到 $Q_{11}=Q_{33}=1$、$Q_{12}=Q_{23}=0$ 和 $2Q_{13}+Q_{22}=4$。令 a=Q₁₃，就得到下方一参数矩阵；这里已找到显式证书，不靠删基失败推断任何非负性结论。",
+            "它的三个特征值是 $1-a,1+a,4-2a$，所以恰在 $-1\\leq a\\leq1$ 时半正定。a=1 给出秩二矩阵和分解 $(x^2+y^2)^2+2(xy)^2$；a=0 给出秩三对角矩阵。两者均表示同一个 p。在 (2,−1) 处，直接计算为 16+16+1=33，而分解计算为 25+8=33。",
+            "这个例子同时说明可行集不必只有一点、数值求解器无需返回某个唯一答案，以及奇异矩阵仍可构成有效证书。检查一个点只用于验算展开；真正的全空间结论来自恒等式和半正定性。"
+          ],
+          "sourceIds": [
+            "C101"
+          ],
+          "formulas": [
+            "Q(a)=\\begin{pmatrix}1&0&a\\\\0&4-2a&0\\\\a&0&1\\end{pmatrix}",
+            "p=(x^2+y^2)^2+2(xy)^2\\geq0"
+          ]
+        },
+        {
+          "id": "limits",
+          "title": "明确的失败与适用边界",
+          "paragraphs": [
+            "人为要求 Gram 矩阵为对角阵会漏解。例如 $(x+y)^2$ 对基 (x,y) 的证书是全部元素为 1 的半正定矩阵；对角矩阵却无法产生交叉项 2xy。因此受限模型不可行，只能否定该模型。更根本的边界是 Motzkin 型多项式 $x^4y^2+x^2y^4+1-3x^2y^2$：均值不等式证明它非负，但它不是多项式平方和；非平方和这一结论在所列来源中给出，本条目不冒称完整重证。",
+            "数值容差也可能制造假证书：$x^2-\\varepsilon$ 的矩阵 diag(−ε,1) 在 ε 很小时看似接近半正定，但多项式在零点严格为负。扩大容差不能修复逻辑。另一方面，基长随变量数与次数组合增长；稠密模型即使凸，也可能过大。增加次数的优化层级收敛，不等于任意固定次数都能找到需要的证书。"
+          ],
+          "sourceIds": [
+            "C101",
+            "C104"
+          ]
+        },
+        {
+          "id": "comparison",
+          "title": "与相邻方法如何选择",
+          "paragraphs": [
+            "与直接全局搜索相比，平方和把寻找反例转为寻找证书；找到负值可否定非负性，而找到可靠分解可肯定非负性，两类证据互补。与采样回归相比，系数匹配保证恒等而非经验拟合。与一般凸对偶相比，这里的可行锥具有明确的多项式解释，因而可以把矩阵解翻译回原问题。",
+            "缩小证书锥能够降低计算成本，却可能增加保守性。对角或对角占优结构、稀疏分块、低次数限制的作用并不相同，不能把任一加速方案的理论保证转给另一方案。比较时应同时记录矩阵维数、下界质量、残差和精确证书恢复率，而不是只比较运行秒数。"
+          ],
+          "sourceIds": [
+            "C104",
+            "C103"
+          ]
+        },
+        {
+          "id": "transfer",
+          "title": "可以迁移到哪里",
+          "paragraphs": [
+            "第一条已知迁移是全局优化下界：若 $f-\\gamma$ 有可靠平方和证书，则所有 x 都满足 f(x)≥γ。若另有点 x* 满足 f(x*)=γ，就同时得到全局最优值与最优点证据；仅有下界不能宣称已定位最优点。",
+            "第二条已知迁移是多项式系统 $\\dot x=F(x)$ 的 Lyapunov 证书。要求 $V-\\varepsilon\\|x\\|^2$ 与 $-\\nabla V\\cdot F-\\varepsilon\\|x\\|^2$ 为平方和，可提供严格裕量；还需 ε>0、F(0)=0、V(0)=0 及适用的 Lyapunov 条件。谈全局结论须保证径向无界与解的存在范围。若 V 和控制器同时未知，乘积项可能破坏凸性。上述联系是成熟方法，不标作新发现。"
+          ],
+          "sourceIds": [
+            "C101",
+            "C102"
+          ]
+        },
+        {
+          "id": "frontier",
+          "title": "进阶阅读与可检验的研究问题",
+          "paragraphs": [
+            "TSSOS 把项之间的关系组织成图并逐步扩充矩阵块，值得学习它在固定松弛阶数下怎样比较稀疏与稠密界，以及哪些假设支撑收敛。它提供的是已有研究路线；不能把某些实验中第一次稀疏迭代已达稠密界，升级为所有问题都如此的定理。",
+            "编辑提出、尚待文献查新的问题是：对具有已知对称性的具体动力系统，能否同时减少 Gram 块大小并提高有理证书恢复成功率？可先固定实例、基、容差和验证器，分别比较稠密、对称约简与项稀疏方案。这里还没有查清创新性，也没有完成截至 2026 年的穷尽前沿综述；阅读重点是建立可复现实验和适用条件清单。"
+          ],
+          "sourceIds": [
+            "C104",
+            "C103"
+          ]
+        }
+      ],
+      "reading": [
+        {
+          "sourceId": "C101",
+          "level": "核心",
+          "instruction": "读作者开放书稿 §3.1.4 的 Theorem 3.39 与 §3.1.6，再手工核对本条目的矩阵。目录、正文与出版版的页码差异须留意。"
+        },
+        {
+          "sourceId": "C102",
+          "level": "研究",
+          "instruction": "官方目录核验：先选 pp.3–22 的控制应用章，再选 pp.181–194 的结构利用章。本轮未取得这些章节正文。"
+        },
+        {
+          "sourceId": "C103",
+          "level": "研究",
+          "instruction": "从官方第 1、4、5 章目录与摘要判断学习顺序；要研究最优点提取，再读第 5 章。当前没有据目录声称证明已核查。"
+        },
+        {
+          "sourceId": "C104",
+          "level": "研究",
+          "instruction": "已读作者公开论文 §2.1、§3 起始及引言；继续比较 §4–5 的层级条件。不要混用 TSSOS 与其他稀疏变体的保证。"
+        }
+      ],
+      "review": {
+        "textRead": true,
+        "hypothesesChecked": true,
+        "exampleRecomputed": true,
+        "scope": "对照作者开放书稿的有限次数 Gram 定理和正文边界，独立重写双向短证明；用有理算术复算示例系数、谱和点值。核对三本书的官方书目及访问层级。不是形式化验证或独立同行审阅。",
+        "gaps": [
+          "Motzkin 非 SOS 性没有在本条目完整重证。",
+          "控制应用书和 Nie 专著仅核对官方目录/摘要，未读全书。",
+          "未逐条重证 TSSOS 收敛定理，未作截至 2026 年的完整查新。"
+        ],
+        "checkedAt": "2026-11-06"
+      },
+      "relatedFamilyIds": [
+        "M024",
+        "M017",
+        "M013"
+      ],
+      "exampleChecks": [
+        {
+          "description": "Gram 展开系数",
+          "expected": "x^4:1, x^3 y:0, x^2 y^2:4, x y^3:0, y^4:1"
+        },
+        {
+          "description": "Q(a) 的 PSD 区间及 a=1 的谱",
+          "expected": "−1 ≤ a ≤ 1；a=1 时特征值 0,2,2，秩 2"
+        },
+        {
+          "description": "p(2,−1) 与平方分解",
+          "expected": "33 = 25 + 8"
+        }
+      ]
+    },
+    {
+      "id": "D006",
+      "slug": "galerkin-cea",
+      "familyId": "M029",
+      "name": "共形 Galerkin、Céa 引理与一维 P1 有限元",
+      "english": "Conforming Galerkin, Céa lemma and one-dimensional P1 FEM",
+      "aliases": [
+        "Ritz–Galerkin 方法",
+        "有限元最佳逼近",
+        "Poisson 方程 P1 离散"
+      ],
+      "subjects": [
+        "65",
+        "35"
+      ],
+      "problemTags": [
+        "偏微分方程近似",
+        "误差界",
+        "变分离散",
+        "稀疏线性系统"
+      ],
+      "summary": "把微分方程放入合适的函数空间，再用有限维子空间近似，是 Galerkin 方法的核心。Céa 引理回答一个关键问题：算出的离散解，距离这个空间所能提供的最佳近似有多远？本条目限定实 Hilbert 空间上的有界强制双线性型，并用一维 Poisson 方程展示弱形式、单元组装、边界条件、线性系统与两种误差的完整联系。它同时说明网格变细何时有用、为什么小代数残差不等于小离散误差，以及如何把同一机制迁移到优化和其他物理模型。",
+      "keywords": [
+        {
+          "zh": "弱形式",
+          "en": "weak formulation",
+          "type": "问题表示",
+          "definition": "把微分方程与测试函数配对，通常通过分部积分降低所需导数阶数，并编码边界条件。"
+        },
+        {
+          "zh": "Sobolev 空间",
+          "en": "Sobolev space",
+          "type": "函数空间",
+          "definition": "同时控制函数及其弱导数；这里 H₀¹ 还要求零边界迹。"
+        },
+        {
+          "zh": "共形",
+          "en": "conforming",
+          "type": "关键假设",
+          "definition": "离散试探空间 Vh 是连续空间 V 的子空间，离散函数满足所需连续性与本质边界条件。"
+        },
+        {
+          "zh": "有界双线性型",
+          "en": "bounded bilinear form",
+          "type": "稳定条件",
+          "definition": "存在 M，使 |a(w,v)|≤M‖w‖‖v‖，控制两个函数之间的相互作用。"
+        },
+        {
+          "zh": "强制性",
+          "en": "coercivity",
+          "type": "稳定条件",
+          "definition": "存在与函数无关的 α>0，使 a(v,v)≥α‖v‖²，排除未控制方向。"
+        },
+        {
+          "zh": "Galerkin 正交性",
+          "en": "Galerkin orthogonality",
+          "type": "证明机制",
+          "definition": "精确解与离散解的误差 e 满足 a(e,vh)=0，对全部离散测试函数成立。"
+        },
+        {
+          "zh": "最佳逼近",
+          "en": "best approximation",
+          "type": "误差基准",
+          "definition": "在指定空间与指定范数下，所有候选函数中与精确解距离的下确界。"
+        },
+        {
+          "zh": "能量范数",
+          "en": "energy norm",
+          "type": "误差尺度",
+          "definition": "当 a 对称且强制时，‖v‖a=√a(v,v)；它体现方程的能量几何。"
+        },
+        {
+          "zh": "P1 元",
+          "en": "piecewise linear element",
+          "type": "离散空间",
+          "definition": "每个单元上一次、单元间连续的有限元，节点值构成自由度。"
+        },
+        {
+          "zh": "刚度矩阵",
+          "en": "stiffness matrix",
+          "type": "代数表示",
+          "definition": "矩阵 Aij=a(φj,φi)，把弱问题转化为节点系数的线性系统。"
+        },
+        {
+          "zh": "先验误差估计",
+          "en": "a priori error estimate",
+          "type": "误差理论",
+          "definition": "在计算前用网格、正则性与稳定常数控制误差，不等于某次计算的实际误差。"
+        },
+        {
+          "zh": "后验误差估计",
+          "en": "a posteriori error estimate",
+          "type": "自适应工具",
+          "definition": "从已算出的解与数据估计误差，用于选择需要细化的区域。"
+        },
+        {
+          "zh": "锁定",
+          "en": "locking",
+          "type": "参数边界",
+          "definition": "某参数趋于极限时离散空间不能有效逼近约束解，固定网格下误差恶化；不能只看固定参数收敛。"
+        }
+      ],
+      "prerequisites": {
+        "intuition": [
+          "导数、积分与分部积分",
+          "分段线性插值",
+          "矩阵方程与正定二次型"
+        ],
+        "proof": [
+          "实 Hilbert 空间与连续线性泛函",
+          "H¹、H₀¹ 与 Poincaré 不等式",
+          "Lax–Milgram 定理和有限维子空间"
+        ]
+      },
+      "sections": [
+        {
+          "id": "problem",
+          "title": "要解决的具体问题",
+          "paragraphs": [
+            "许多边值问题的未知量是一整个函数，不能直接存入计算机。有限元先选定一组局部基函数，用有限个系数表示近似解。真正需要回答的不是矩阵能否被求解，而是这个有限维答案是否忠实于连续方程，以及误差能否随着空间丰富而减小。",
+            "以区间上的 −u″=f、两端位移为零为例，乘以两端为零的测试函数并分部积分，得到导数的内积等于载荷作用。零边界迹属于函数空间要求；自然边界条件则来自边界项。这一步决定离散模型究竟求解哪个问题，不能在组装结束后随意补一个边界数值。"
+          ],
+          "sourceIds": [
+            "C204",
+            "C202"
+          ]
+        },
+        {
+          "id": "statement",
+          "title": "Céa 引理的完整条件",
+          "paragraphs": [
+            "设 V 为实 Hilbert 空间，$a:V\\times V\\to\\mathbb R$ 为双线性型，并存在 M<∞、α>0，对所有 w,v 满足 $|a(w,v)|\\leq M\\|w\\|_V\\|v\\|_V$ 与 $a(v,v)\\geq\\alpha\\|v\\|_V^2$。设 ℓ 是 V 上的连续线性泛函，Vh 是 V 的有限维子空间。连续解与离散解分别满足 a(u,v)=ℓ(v) 和 a(uh,vh)=ℓ(vh)，其存在唯一性由这些条件保证。",
+            "结论是 $\\|u-u_h\\|_V\\leq(M/\\alpha)\\inf_{v_h\\in V_h}\\|u-v_h\\|_V$。双线性型不必对称；若进一步对称，则在能量范数中有常数为 1 的最佳逼近等式。Céa 本身没有给出 h 的阶数，必须另外估计插值误差，并检查解的正则性和网格条件。"
+          ],
+          "sourceIds": [
+            "C204"
+          ],
+          "formulas": [
+            "\\|u-u_h\\|_V\\leq\\frac M\\alpha\\inf_{v_h\\in V_h}\\|u-v_h\\|_V",
+            "a=a^T\\ \\Longrightarrow\\ \\|u-u_h\\|_a=\\min_{v_h\\in V_h}\\|u-v_h\\|_a"
+          ]
+        },
+        {
+          "id": "mechanism",
+          "title": "误差为什么接近最佳逼近",
+          "paragraphs": [
+            "令 e=u−uh。因为 Vh 包含在 V 内，连续方程可以用任意 vh 测试；减去离散方程就得到 a(e,vh)=0。现在任取 vh，把 e 拆成 (u−vh)+(vh−uh)，第二部分属于 Vh，故强制性与有界性夹住 a(e,e)，得到下方估计。e=0 时结论显然；否则约去误差范数，再对 vh 取下确界。",
+            "对称时还可展开能量平方：u−vh=e+(uh−vh)，交叉项因正交性消失，因此任何候选的误差平方都是离散解误差平方加一个非负项。这就是 Ritz 的最小能量解释。它提示迁移时先寻找稳定的双线性型和合适空间，而不是照搬节点公式。"
+          ],
+          "sourceIds": [
+            "C204"
+          ],
+          "formulas": [
+            "\\alpha\\|e\\|_V^2\\leq a(e,e)=a(e,u-v_h)\\leq M\\|e\\|_V\\|u-v_h\\|_V",
+            "\\|u-v_h\\|_a^2=\\|u-u_h\\|_a^2+\\|u_h-v_h\\|_a^2"
+          ]
+        },
+        {
+          "id": "workflow",
+          "title": "从弱形式到可信数值解",
+          "paragraphs": [
+            "先写出区域、载荷和边界数据，再选择范数并估计稳定常数。随后构造满足边界条件的空间与局部基，把单元积分组装成全局系统。对称强制问题得到正定矩阵，但这种正定性必须由模型与离散空间保证，不能只凭数值例子观察。",
+            "总误差应区分建模误差、空间离散误差、积分近似误差和代数求解误差。标准 Céa 估计比较精确连续解与使用同一 a、ℓ 的精确离散解；若用数值积分、近似几何或未收敛迭代，还需增加相应一致性或求解误差。残差很小只能说明当前矩阵方程解得好。"
+          ],
+          "sourceIds": [
+            "C201",
+            "C203",
+            "C204"
+          ],
+          "steps": [
+            "检验弱形式和函数空间中的边界条件。",
+            "构造共形网格与基，计算单元刚度和载荷。",
+            "组装并消去已知边界自由度。",
+            "求解离散系统，同时记录残差及求解精度。",
+            "用网格加密、精确例题或后验估计检查离散误差。"
+          ]
+        },
+        {
+          "id": "example",
+          "title": "完整算例：四单元 Poisson 问题",
+          "paragraphs": [
+            "取 $-u''=1$ 于 (0,1)，u(0)=u(1)=0，精确解是 $u=x(1-x)/2$。在 $V=H_0^1(0,1)$ 中用导数范数，$a(w,v)=\\int_0^1w' v'$，故 M=α=1。均匀分成四段，h=1/4，三个内部节点的帽函数构成基。",
+            "每个单元的刚度为 $h^{-1}\\begin{pmatrix}1&-1\\\\-1&1\\end{pmatrix}$，常载荷的单元向量为 $(h/2,h/2)^T$。组装后得到下方矩阵与右端；代入可验三个自由度为 3/32、1/8、3/32。边界值补零后，uh 恰好是精确解的节点插值。",
+            "在任一单元 [a,b] 上，插值误差为 $e(x)=(x-a)(b-x)/2$，因此该单元的导数误差平方积分为 h³/12，函数误差平方积分为 h⁵/120。四段相加得到能量误差平方 1/192、L² 误差平方 1/30720。每个帽函数对应的正交积分均为零；因为其导数在单元上常数，积分只取误差端点差，而端点误差为零。",
+            "再与两单元结果 1/48、1/1920 比较：网格减半，能量误差减半，L² 误差缩至四分之一。这里的精确误差公式来自特殊二次解的直接积分；一般问题的二阶 L² 估计还需额外对偶正则性，不能仅由 Céa 推出。"
+          ],
+          "sourceIds": [
+            "C204",
+            "C202"
+          ],
+          "formulas": [
+            "\\begin{pmatrix}8&-4&0\\\\-4&8&-4\\\\0&-4&8\\end{pmatrix}\\begin{pmatrix}U_1\\\\U_2\\\\U_3\\end{pmatrix}=\\begin{pmatrix}1/4\\\\1/4\\\\1/4\\end{pmatrix}",
+            "(U_1,U_2,U_3)=(3/32,1/8,3/32)",
+            "\\|e'\\|_{L^2}^2=\\frac{h^2}{12},\\qquad \\|e\\|_{L^2}^2=\\frac{h^4}{120}"
+          ]
+        },
+        {
+          "id": "limits",
+          "title": "什么时候不能套用这条结论",
+          "paragraphs": [
+            "一个完全可算的失败是纯 Neumann 问题 −u″=0、u′(0)=u′(1)=0。所有常函数都是解；若仍在完整 H¹ 空间上使用导数双线性型，非零常函数的能量为零，强制性失效，刚度矩阵也有常数核。需要附加零均值或改用商空间；对一般载荷还必须满足相容条件。",
+            "共形并不自动等于参数鲁棒。近不可压缩弹性中，Lamé 参数的比值会进入稳定或逼近分析，简单位移元可能锁定。Céa 对每个固定参数成立，不代表误差常数对参数极限一致。非共形、间断、混合或 Petrov–Galerkin 离散则要改用适合的范数、稳定条件及一致性分析，不能照搬本条目的证明。"
+          ],
+          "sourceIds": [
+            "C205",
+            "C201"
+          ]
+        },
+        {
+          "id": "comparison",
+          "title": "与差分、谱方法和变分优化比较",
+          "paragraphs": [
+            "一维常系数、均匀网格、线性元与精确积分的本例，在内部节点上等价于中心差分方程。这个局部等价不意味着非均匀网格、复杂几何或变系数情况下两种方法仍相同。有限元优势来自空间、边界与几何的统一组织，代价是基函数和积分的建模工作。",
+            "用全局多项式或其他光滑基做 Galerkin 也可满足同一抽象引理；差别在于逼近误差、矩阵结构和局部处理能力。若 a 对称，离散问题同时是严格凸二次能量的最小化；若 a 不对称，Galerkin 方程仍可能适用，但不能把原方程直接说成该二次能量的极小条件。"
+          ],
+          "sourceIds": [
+            "C204",
+            "C201"
+          ]
+        },
+        {
+          "id": "transfer",
+          "title": "跨领域迁移需要保留什么",
+          "paragraphs": [
+            "迁移到其他扩散模型时，保留的是弱算子、稳定性和共形空间。迁移到线性代数时，对称正定刚度矩阵允许使用共轭梯度等方法，但预条件和停止准则应根据能量误差设计。空间误差已经很大时，过度求精矩阵解并不能改善物理答案。",
+            "迁移到线性弹性不能只把标量换成向量：要检查刚体运动、边界条件及参数依赖；接近不可压缩极限时，位移–压力混合形式引入新的离散 inf-sup 条件。这里的联系有成熟理论支持。把它们用于一个新材料或新方程时，仍须重新证明具体模型的适定性与离散稳定性。"
+          ],
+          "sourceIds": [
+            "C205",
+            "C204"
+          ]
+        },
+        {
+          "id": "frontier",
+          "title": "从固定网格走向自适应研究",
+          "paragraphs": [
+            "下一步是把未知误差转换成可计算的局部指标，再进入求解、估计、标记和细化的循环。《Axioms of Adaptivity》用未细化区域的稳定性、细化后的缩减、准正交性及离散可靠性组织这类分析；最优收敛还依赖其算法、网格与参数条件，并非有一个误差指标就自动成立。",
+            "编辑提出、尚待文献查新的研究问题是：对指定的参数相关扩散问题，能否让空间细化与迭代求解停止准则共同控制目标误差，而不把成本浪费在过精的代数求解上？已有研究处理不精确求解器，不能把这一总思路当成新贡献。应先明确目标量、参数区间和比较基线，再核查是否有真正未解决的条件或复杂度缺口。"
+          ],
+          "sourceIds": [
+            "C206"
+          ]
+        }
+      ],
+      "reading": [
+        {
+          "sourceId": "C202",
+          "level": "入门",
+          "instruction": "官方目录中第 1–2 章 pp.1–44 对应插值与一维有限元；第 7 章 pp.177–201 进入抽象分析。本轮只核对目录，正文学习可先用 C204。"
+        },
+        {
+          "sourceId": "C204",
+          "level": "核心",
+          "instruction": "已读 Lecture 1 §§2–6，重点重做 Theorem 2 的误差证明，并用自己的基函数组装本例。"
+        },
+        {
+          "sourceId": "C201",
+          "level": "核心",
+          "instruction": "官方目录的 Variational Formulation、Polynomial Approximation 与 n-Dimensional Variational Problems 建立严格路线；只核对目录，不等于相关证明已读。"
+        },
+        {
+          "sourceId": "C203",
+          "level": "核心",
+          "instruction": "SIAM Classics 版第 1–2 章建立变分与有限元语言，第 4 章进入数值积分等变体。官方目录/摘录已核对，全章尚未阅读。"
+        },
+        {
+          "sourceId": "C205",
+          "level": "研究",
+          "instruction": "已读 §1 与 §2 的 pp.1–3，观察固定参数 Céa 估计和参数一致稳定性为何不同。"
+        },
+        {
+          "sourceId": "C206",
+          "level": "研究",
+          "instruction": "已读引言与 §3.1 四公理；进一步研究 §7 的不精确求解器时需核查完整假设。本轮不声称完成其全部证明。"
+        }
+      ],
+      "review": {
+        "textRead": true,
+        "hypothesesChecked": true,
+        "exampleRecomputed": true,
+        "scope": "对照公开作者讲义的弱形式、强制性、正交性与 Céa 定理；独立重写短证明，以有理多项式积分复算两种网格的解、两种误差和正交性，并核验官方书目。不是形式化证明或独立同行审阅。",
+        "gaps": [
+          "未系统证明一般网格的插值估计、对偶正则性或高维收敛率。",
+          "三本推荐书以官方目录/公开摘要核对为主，未声称通读。",
+          "未重证混合元锁定分析和自适应全部定理，也未完成前沿查新。"
+        ],
+        "checkedAt": "2026-11-06"
+      },
+      "relatedFamilyIds": [
+        "M013",
+        "M030",
+        "M024"
+      ],
+      "exampleChecks": [
+        {
+          "description": "h=1/4 的内部节点系数",
+          "expected": "3/32, 1/8, 3/32；AU−F=(0,0,0)"
+        },
+        {
+          "description": "h=1/4 的两种误差平方",
+          "expected": "能量 1/192；L2 1/30720"
+        },
+        {
+          "description": "h=1/2 的两种误差平方",
+          "expected": "能量 1/48；L2 1/1920"
+        },
+        {
+          "description": "h=1/4 对三个帽函数的 Galerkin 正交积分",
+          "expected": "0,0,0"
+        }
+      ]
+    }
+  ],
+  "books": [
+    {
+      "id": "C101",
+      "type": "book",
+      "title": "Semidefinite Optimization and Convex Algebraic Geometry",
+      "authors": [
+        "Grigoriy Blekherman",
+        "Pablo A. Parrilo",
+        "Rekha R. Thomas"
+      ],
+      "year": "2013",
+      "edition": "1",
+      "publisher": "SIAM",
+      "doi": "10.1137/1.9781611972290",
+      "isbn": "9781611972283",
+      "url": "https://epubs.siam.org/doi/book/10.1137/1.9781611972290",
+      "openUrl": "https://www.mit.edu/~parrilo/sdocag/SIAMBookFinalvNov12-2012.pdf",
+      "level": "核心",
+      "reason": "把有限次数代数证书与 SDP 联系起来，适合作为 Gram 等价和数值复核的主线。",
+      "prerequisites": "线性代数、凸优化、多项式",
+      "limitations": "三位为编者。公开文本是 2012/11/1 作者书稿，出版书为 2013 年；本轮选读而非通读。",
+      "locators": [
+        "作者稿 §3.1.4，Theorem 3.39，印刷页 65（PDF 第 81 页）",
+        "§3.1.5，Theorem 3.41 与基选择，pp.66–67",
+        "§3.1.6，Theorem 3.43–3.44，pp.70–71",
+        "§3.6.2 Lyapunov functions，pp.136–138",
+        "§4.2.2 Motzkin’s Example，p.162"
+      ],
+      "supports": [
+        "D005 statement",
+        "D005 mechanism",
+        "D005 workflow",
+        "D005 limits",
+        "D005 transfer"
+      ],
+      "access": "excerpt",
+      "readScope": "实际读取上述定理段、基选择及数值恢复段、Lyapunov 段和 Motzkin 例的陈述；没有阅读或验证整书全部证明。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "C102",
+      "type": "book",
+      "title": "Positive Polynomials in Control",
+      "authors": [
+        "Didier Henrion",
+        "Andrea Garulli"
+      ],
+      "year": "2005",
+      "edition": "1",
+      "publisher": "Springer Berlin Heidelberg",
+      "doi": "10.1007/b96977",
+      "isbn": "9783540239482",
+      "url": "https://link.springer.com/book/10.1007/b96977",
+      "openUrl": "",
+      "level": "研究",
+      "reason": "应用、代数结构与数值工具分章组织，便于把 SOS 从证书迁移到控制问题。",
+      "prerequisites": "控制系统、Lyapunov 理论、SDP",
+      "limitations": "作者字段为编者。官方页面提示订阅预览；本轮未读取所荐章节正文，不能凭目录核验控制定理。",
+      "locators": [
+        "Control Applications of Sum of Squares Programming，pp.3–22",
+        "Exploiting Algebraic Structure in Sum of Squares Programs，pp.181–194",
+        "SOSTOOLS and Its Control Applications，pp.273–292"
+      ],
+      "supports": [
+        "D005 transfer reading"
+      ],
+      "access": "contents",
+      "readScope": "官方书目信息、目录、章名和页码已读；章节正文未读。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "C103",
+      "type": "book",
+      "title": "Moment and Polynomial Optimization",
+      "authors": [
+        "Jiawang Nie"
+      ],
+      "year": "2023",
+      "edition": "",
+      "publisher": "SIAM",
+      "doi": "10.1137/1.9781611977608",
+      "isbn": "9781611977592",
+      "url": "https://epubs.siam.org/doi/10.1137/1.9781611977608",
+      "openUrl": "",
+      "level": "研究",
+      "reason": "从 Gram 可行性进到优化、矩与最优点提取；与应用文集互补，适合后续系统研究。",
+      "prerequisites": "凸优化、实代数基础、矩阵理论",
+      "limitations": "仅核对官方目录及页面公开的章节摘要；没有取得完整章节正文。",
+      "locators": [
+        "Chapter 1: Basics of Linear Convex Optimization，pp.1–34",
+        "Chapter 4: Unconstrained Polynomial Optimization，pp.117–136",
+        "Chapter 5: Constrained Polynomial Optimization，pp.137–178",
+        "Chapter 6: Tight Moment-SOS Hierarchies，pp.179–213",
+        "Chapter 12: Special Topics，pp.387–442"
+      ],
+      "supports": [
+        "D005 comparison reading",
+        "D005 frontier reading"
+      ],
+      "access": "contents",
+      "readScope": "读官方页面第 1、4、5、6、12 章的公开摘要和目录，并核对 2023 年及 ISBN。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "C104",
+      "type": "paper",
+      "title": "TSSOS: A Moment-SOS Hierarchy That Exploits Term Sparsity",
+      "authors": [
+        "Jie Wang",
+        "Victor Magron",
+        "Jean-Bernard Lasserre"
+      ],
+      "year": "2021",
+      "edition": "",
+      "publisher": "SIAM Journal on Optimization 31(1), 30–58",
+      "doi": "10.1137/19M1307871",
+      "isbn": "",
+      "url": "https://doi.org/10.1137/19M1307871",
+      "openUrl": "https://wangjie212.github.io/jiewang/research/tssos.pdf",
+      "level": "研究",
+      "reason": "以明确的单项式结构展示如何缩小 SDP，并区别实验证据与层级保证。",
+      "prerequisites": "SOS Gram 表示、图、凸优化",
+      "limitations": "已读引言与初步构造；后续约束层级和收敛证明尚未逐条复核。不能代表 2026 年全部最新研究。",
+      "locators": [
+        "§1 Introduction，pp.30–33",
+        "§2.1 Notation and SOS polynomials，pp.33–34，式 (2.1)–(2.3)",
+        "§3 Exploiting term sparsity in SOS decompositions，pp.34–35，式 (3.1) 与 Definition 3.1"
+      ],
+      "supports": [
+        "D005 statement",
+        "D005 comparison",
+        "D005 frontier"
+      ],
+      "access": "excerpt",
+      "readScope": "读取作者托管的已出版论文前六页中的引言、SOS/Gram 定义、系数匹配及 block-closure 定义；未声称通读后续证明。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "C201",
+      "type": "book",
+      "title": "The Mathematical Theory of Finite Element Methods",
+      "authors": [
+        "Susanne C. Brenner",
+        "L. Ridgway Scott"
+      ],
+      "year": "2008",
+      "edition": "3",
+      "publisher": "Springer New York",
+      "doi": "10.1007/978-0-387-75934-0",
+      "isbn": "9780387759333",
+      "url": "https://link.springer.com/book/10.1007/978-0-387-75934-0",
+      "openUrl": "",
+      "level": "核心",
+      "reason": "目录覆盖函数空间、逼近理论、变分问题及自适应，适合建立理论证明路线。",
+      "prerequisites": "实分析、Sobolev 空间、线性 PDE",
+      "limitations": "官方订阅预览；本轮核验书目和目录，核心定理正文以公开讲义核对。",
+      "locators": [
+        "Variational Formulation of Elliptic Boundary Value Problems，pp.49–67",
+        "Polynomial Approximation Theory in Sobolev Spaces，pp.93–127",
+        "n-Dimensional Variational Problems，pp.129–154",
+        "Adaptive Meshes，pp.241–269",
+        "Variational Crimes，pp.271–309"
+      ],
+      "supports": [
+        "D006 workflow reading",
+        "D006 limits reading"
+      ],
+      "access": "contents",
+      "readScope": "读取官方书目、版次及章节目录，未把目录视为证明阅读。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "C202",
+      "type": "book",
+      "title": "The Finite Element Method: Theory, Implementation, and Applications",
+      "authors": [
+        "Mats G. Larson",
+        "Fredrik Bengzon"
+      ],
+      "year": "2013",
+      "edition": "1",
+      "publisher": "Springer Berlin Heidelberg",
+      "doi": "10.1007/978-3-642-33287-6",
+      "isbn": "9783642332869",
+      "url": "https://link.springer.com/book/10.1007/978-3-642-33287-6",
+      "openUrl": "",
+      "level": "基础",
+      "reason": "目录从一维插值、组装走向抽象分析，适合作为手算与实现的入门路径。",
+      "prerequisites": "微积分、线性代数",
+      "limitations": "仅核对官方目录和介绍；示例的具体系数与误差为本条目独立推导，未声称来自书中某例。",
+      "locators": [
+        "Chapter 1: Piecewise Polynomial Approximation in 1D，pp.1–22",
+        "Chapter 2: The Finite Element Method in 1D，pp.23–44",
+        "Chapter 6: Solution of Sparse Linear Systems，pp.143–176",
+        "Chapter 7: Abstract Finite Element Analysis，pp.177–201"
+      ],
+      "supports": [
+        "D006 example reading",
+        "D006 problem reading"
+      ],
+      "access": "contents",
+      "readScope": "读取官方出版信息、目录与课程定位，没有取得对应整章正文。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "C203",
+      "type": "book",
+      "title": "The Finite Element Method for Elliptic Problems",
+      "authors": [
+        "Philippe G. Ciarlet"
+      ],
+      "year": "2002",
+      "edition": "Classics edition; 1978 original reprint",
+      "publisher": "SIAM",
+      "doi": "10.1137/1.9780898719208",
+      "isbn": "9780898715149",
+      "url": "https://epubs.siam.org/doi/book/10.1137/1.9780898719208",
+      "openUrl": "",
+      "level": "核心",
+      "reason": "经典椭圆问题分析可用于追查变分近似、数值积分与一致性误差的基础脉络。",
+      "prerequisites": "泛函分析、椭圆 PDE、逼近理论",
+      "limitations": "2002 年为 Classics 重印版，不当作新近前沿；本轮读官方目录及公开摘录，未通读章节。",
+      "locators": [
+        "Chapter 1: Elliptic Boundary Value Problems，pp.1–35",
+        "Chapter 2: Introduction to the Finite Element Method，pp.36–109",
+        "Chapter 4: Other Finite Element Methods for Second-Order Problems，pp.174–286"
+      ],
+      "supports": [
+        "D006 workflow reading"
+      ],
+      "access": "contents",
+      "readScope": "核对官方书目信息、目录和章节介绍；对具体数值积分结论保留全文核验任务。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "C204",
+      "type": "notes",
+      "title": "Lecture 1 — Model problems and the Ritz–Galerkin method",
+      "authors": [
+        "Luca Heltai"
+      ],
+      "year": "",
+      "edition": "",
+      "publisher": "Numerical Methods for Partial Differential Equations course",
+      "doi": "",
+      "isbn": "",
+      "url": "https://luca-heltai.github.io/nmpde/lectures/lecture-01/",
+      "openUrl": "https://luca-heltai.github.io/nmpde/lectures/lecture-01/",
+      "level": "核心",
+      "reason": "公开作者讲义完整连接弱形式、Galerkin 正交性和 Céa 证明，适合逐步核验。",
+      "prerequisites": "Hilbert 空间、分部积分",
+      "limitations": "网页没有核实发布日期，年份留空；本条目只复核所列讲次，不能代替整套课程。",
+      "locators": [
+        "§2 The weak formulation，式 (2)–(5)",
+        "§3 Well-posedness and the Lax–Milgram lemma，Theorem 1",
+        "§4 The Ritz–Galerkin approximation，式 (9)–(14)",
+        "§5 Galerkin orthogonality，式 (15)",
+        "§6 Céa’s lemma，Theorem 2，式 (16)–(17)"
+      ],
+      "supports": [
+        "D006 statement",
+        "D006 mechanism",
+        "D006 example",
+        "D006 comparison"
+      ],
+      "access": "chapter",
+      "readScope": "完整读取 Lecture 1 的 §§2–6，包括定理假设和短证明；算例另行独立复算。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "C205",
+      "type": "notes",
+      "title": "Finite Element Methods for Linear Elasticity",
+      "authors": [
+        "Long Chen"
+      ],
+      "year": "2024",
+      "edition": "",
+      "publisher": "University of California, Irvine",
+      "doi": "",
+      "isbn": "",
+      "url": "https://www.math.uci.edu/~chenlong/226/femelasticity.pdf",
+      "openUrl": "https://www.math.uci.edu/~chenlong/226/femelasticity.pdf",
+      "level": "研究",
+      "reason": "用近不可压缩弹性解释参数依赖、锁定和混合形式，揭示直接套用 Céa 的边界。",
+      "prerequisites": "向量 Sobolev 空间、线性弹性、inf-sup 条件",
+      "limitations": "公开讲义日期 March 24, 2024；本轮读取前三页，未阅读应力元构造余下部分或验证所有锁定证明。",
+      "locators": [
+        "§1 Displacement formulation，pp.1–2，式 (1)–(3)",
+        "§2 Displacement and pressure formulation，pp.2–3，式 (4)–(6)"
+      ],
+      "supports": [
+        "D006 limits",
+        "D006 transfer"
+      ],
+      "access": "excerpt",
+      "readScope": "网页抓取失败后从同一大学公开 URL 正常下载，提取并阅读 PDF pp.1–3；未绕过登录或访问限制。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "C206",
+      "type": "paper",
+      "title": "Axioms of Adaptivity",
+      "authors": [
+        "Carsten Carstensen",
+        "Michael Feischl",
+        "Marcus Page",
+        "Dirk Praetorius"
+      ],
+      "year": "2014",
+      "edition": "",
+      "publisher": "Computers & Mathematics with Applications 67, 1195–1253",
+      "doi": "10.1016/j.camwa.2013.12.003",
+      "isbn": "",
+      "url": "https://doi.org/10.1016/j.camwa.2013.12.003",
+      "openUrl": "https://arxiv.org/html/1312.1171v1",
+      "level": "研究",
+      "reason": "把自适应收敛需要的条件分解为四项，便于检验新的误差指标和离散方法。",
+      "prerequisites": "Galerkin 误差分析、后验估计、网格细化",
+      "limitations": "实际读取 2013 年 arXiv v1 的引言与公理；2014 年出版信息已由 arXiv 核对。未逐行校勘两版本或复核全篇证明。",
+      "locators": [
+        "arXiv v1 §1.1–1.2",
+        "§3.1 Set of axioms，(A1)–(A4)",
+        "§7 Incorporation of an Inexact Solver Algorithm（仅目录定位）"
+      ],
+      "supports": [
+        "D006 frontier"
+      ],
+      "access": "excerpt",
+      "readScope": "读取开放 HTML 的引言及 §3.1 四公理原式，核对 §7 标题；没有把摘要当作完整定理证明。",
+      "checkedAt": "2026-11-06"
+    }
+  ],
+  "subjectGuides": {
+    "90": {
+      "overview": "MSC 90 运筹学与数学规划研究如何在约束下作出可验证的最优决策。入口宜按目标、可行域、变量类型和证书组织，而不只罗列求解器名称。本批深入的是多项式平方和证书，不能代表整个学科已覆盖。",
+      "questions": [
+        "一个候选决策是否可行，最优性差距能否给出可靠上下界？",
+        "模型是凸的、非凸的还是带整数变量，结构如何影响可解性？",
+        "数据、参数或约束发生扰动时，解与最优值有多敏感？",
+        "大规模模型如何分解，同时保留可核查的收敛或最优性保证？"
+      ],
+      "branches": [
+        "线性与锥优化：线性规划、二阶锥及半正定规划。",
+        "非线性与全局优化：局部驻点、凸松弛和全局证书。",
+        "整数与组合优化：离散决策、松弛、分支与割。",
+        "随机与鲁棒优化：不确定信息下的决策和风险。"
+      ],
+      "approaches": [
+        {
+          "name": "凸性与对偶",
+          "purpose": "构造下界、最优性条件和可验证的原始–对偶差距。",
+          "conditions": "先辨认凸性、约束资格与强对偶的额外条件；弱对偶的下界不依赖强对偶。",
+          "methodIds": [
+            "M024"
+          ]
+        },
+        {
+          "name": "平方和与 SDP 证书",
+          "purpose": "为多项式不等式或全局目标提供可核对的充分证据。",
+          "conditions": "固定基和次数；受约束问题还需乘子表示条件；浮点结果必须复核。",
+          "methodIds": [
+            "M026"
+          ]
+        },
+        {
+          "name": "变分建模",
+          "purpose": "把函数或轨迹作为决策变量，用能量、约束及极值原理表达问题。",
+          "conditions": "检查函数空间、紧性、下半连续性与边界条件；存在解与数值找到解是不同问题。",
+          "methodIds": [
+            "M013"
+          ]
+        },
+        {
+          "name": "迭代线性代数",
+          "purpose": "求解优化步骤产生的大规模线性系统。",
+          "conditions": "算法依赖对称性、正定性与预条件结构；代数残差不是全局最优性证书。",
+          "methodIds": [
+            "M030"
+          ]
+        }
+      ],
+      "reading": [
+        {
+          "title": "Semidefinite Optimization and Convex Algebraic Geometry",
+          "url": "https://www.mit.edu/~parrilo/sdocag/SIAMBookFinalvNov12-2012.pdf",
+          "locator": "Chapter 3，§3.1.4 与 §3.1.6",
+          "note": "已读固定多项式的 Gram 表示与数值证书段；从 M026 进入。"
+        },
+        {
+          "title": "Moment and Polynomial Optimization",
+          "url": "https://epubs.siam.org/doi/10.1137/1.9781611977608",
+          "locator": "Chapter 1、4–6",
+          "note": "官方目录及章节摘要已核对，正文尚未系统阅读。"
+        }
+      ],
+      "boundaries": "本批没有深入覆盖整数规划、随机规划、动态规划、博弈或最优运输；不能根据本页宣称运筹学全景已调研完成。",
+      "next": [
+        "为线性规划补一条含原始–对偶证书的完整条目。",
+        "选择一个混合整数实例，区分松弛下界和可行上界。",
+        "为受约束多项式优化单列 Archimedean 条件与层级收敛。"
+      ],
+      "prerequisites": [
+        "线性代数与实分析",
+        "凸集、凸函数和基本概率",
+        "数值误差及复杂度的基本认识"
+      ],
+      "progress": "本页提供成熟结构导读；D005 是已核验的窄范围实例，稀疏证书选题仍待按具体对象查新。"
+    },
+    "65": {
+      "overview": "MSC 65 数值分析研究有限计算怎样可靠地逼近数学问题，并解释误差、稳定性、条件数及计算成本的关系。方法应按连续问题、离散形式、求解算法和验证证据分层检索。本批以共形有限元作完整示范。",
+      "questions": [
+        "连续问题的小扰动会导致多大解的变化，即问题是否良态？",
+        "离散误差、舍入误差与迭代误差各占多少，如何平衡计算成本？",
+        "网格、步长或逼近阶数改变后，误差是否按理论缩小？",
+        "在缺少精确解时，能否构造可靠的后验指标或上下界？"
+      ],
+      "branches": [
+        "数值线性代数：分解、Krylov 迭代、特征问题与预条件。",
+        "逼近与数值积分：插值、投影、正交基及求积误差。",
+        "微分方程数值方法：时间推进、差分、有限元与谱方法。",
+        "自适应与可靠计算：误差估计、网格细化、区间或精确证书。"
+      ],
+      "approaches": [
+        {
+          "name": "Galerkin 与有限元",
+          "purpose": "把连续变分问题限制到有限维空间，并用最佳逼近估计控制离散误差。",
+          "conditions": "本批适用于有界强制双线性型、共形子空间及一致的离散形式。",
+          "methodIds": [
+            "M029"
+          ]
+        },
+        {
+          "name": "Krylov 子空间迭代",
+          "purpose": "在稀疏大规模系统上用矩阵–向量乘逐步改善近似。",
+          "conditions": "具体算法需区分正定、非对称和不定系统，停止条件应匹配目标误差。",
+          "methodIds": [
+            "M030"
+          ]
+        },
+        {
+          "name": "不动点迭代",
+          "purpose": "把非线性方程或隐式离散步骤转成迭代映射。",
+          "conditions": "收敛范围、压缩常数与初始区域必须检查；收敛不等于快速。",
+          "methodIds": [
+            "M014"
+          ]
+        },
+        {
+          "name": "证书与精确复核",
+          "purpose": "把数值猜测转换成可独立检查的恒等式或不等式证据。",
+          "conditions": "证书类型必须对应原始问题；容差不能冒充严格符号判断。",
+          "methodIds": [
+            "M026"
+          ]
+        }
+      ],
+      "reading": [
+        {
+          "title": "The Finite Element Method: Theory, Implementation, and Applications",
+          "url": "https://link.springer.com/book/10.1007/978-3-642-33287-6",
+          "locator": "Chapter 1–2、6–7",
+          "note": "官方目录核验；一维实现到抽象误差分析的入门路线。"
+        },
+        {
+          "title": "Lecture 1 — Model problems and the Ritz–Galerkin method",
+          "url": "https://luca-heltai.github.io/nmpde/lectures/lecture-01/",
+          "locator": "§§2–6，Theorem 2",
+          "note": "已读公开正文并复算窄范围例题。"
+        },
+        {
+          "title": "Axioms of Adaptivity",
+          "url": "https://arxiv.org/html/1312.1171v1",
+          "locator": "§3.1 (A1)–(A4)",
+          "note": "已读四公理定义，尚未复核全文最优性证明。"
+        }
+      ],
+      "boundaries": "没有把一个 Poisson 算例外推成所有 PDE 的收敛保证；时间离散、随机算法、高维积分与非线性稳定性仍待补充。",
+      "next": [
+        "补充共轭梯度的能量误差与预条件例题。",
+        "增加一种时间离散方法，分别检查稳定性和阶数。",
+        "选择有奇点的 PDE，展示均匀网格与自适应的差别。"
+      ],
+      "prerequisites": [
+        "微积分与线性代数",
+        "范数、条件数和浮点误差",
+        "进一步阅读需要泛函分析与弱导数"
+      ],
+      "progress": "Céa 与一维 P1 是成熟理论；将自适应和迭代停止联合用于具体参数问题的创新性尚待查新。"
+    }
+  },
+  "retrievalLog": [
+    {
+      "date": "2026-11-06",
+      "url": "https://www.mit.edu/~parrilo/sdocag/SIAMBookFinalvNov12-2012.pdf",
+      "status": "success",
+      "detail": "作者开放书稿可读，使用印刷页与 PDF 页双定位；选读定理及边界，不记录为全书通读。"
+    },
+    {
+      "date": "2026-11-06",
+      "url": "https://link.springer.com/book/10.1007/b96977",
+      "status": "limited",
+      "detail": "官方书目和目录成功；页面显示订阅预览，相关整章正文未读。"
+    },
+    {
+      "date": "2026-11-06",
+      "url": "https://epubs.siam.org/doi/10.1137/1.9781611977608",
+      "status": "limited",
+      "detail": "官方出版年、ISBN、目录和章节摘要可读；没有以摘要代替整章证明。"
+    },
+    {
+      "date": "2026-11-06",
+      "url": "https://wangjie212.github.io/jiewang/research/tssos.pdf",
+      "status": "success",
+      "detail": "作者托管的 2021 出版论文可读；核对 pp.30–35 的结构与公式。"
+    },
+    {
+      "date": "2026-11-06",
+      "url": "https://link.springer.com/book/10.1007/978-0-387-75934-0",
+      "status": "limited",
+      "detail": "官方目录及第三版信息可读，订阅正文未读。"
+    },
+    {
+      "date": "2026-11-06",
+      "url": "https://link.springer.com/book/10.1007/978-3-642-33287-6",
+      "status": "limited",
+      "detail": "官方目录、出版信息可读；未声称打开其章节正文。"
+    },
+    {
+      "date": "2026-11-06",
+      "url": "https://epubs.siam.org/doi/book/10.1137/1.9780898719208",
+      "status": "limited",
+      "detail": "官方目录和公开摘录可读，整章未系统阅读。"
+    },
+    {
+      "date": "2026-11-06",
+      "url": "https://www.math.uci.edu/~chenlong/226/Ch2FEM.pdf",
+      "status": "failed",
+      "detail": "网页抓取返回 502，本批不引用该文件正文。"
+    },
+    {
+      "date": "2026-11-06",
+      "url": "https://www.math.uci.edu/~chenlong/226/femelasticity.pdf",
+      "status": "recovered",
+      "detail": "网页抓取返回 502；随后从同一公开 URL 正常下载成功，读取 pp.1–3。"
+    },
+    {
+      "date": "2026-11-06",
+      "url": "https://luca-heltai.github.io/nmpde/lectures/lecture-01/",
+      "status": "success",
+      "detail": "作者课程网页正文可读，核对 §§2–6。"
+    },
+    {
+      "date": "2026-11-06",
+      "url": "https://arxiv.org/html/1312.1171v4",
+      "status": "failed",
+      "detail": "错误版本 URL 返回 404；回到 arXiv 摘要页，经实际 HTML 链接定位到 v1。"
+    },
+    {
+      "date": "2026-11-06",
+      "url": "https://arxiv.org/html/1312.1171v1",
+      "status": "success",
+      "detail": "实际公开 HTML 可读，核对引言与 §3.1 四公理，期刊出版信息由摘要页核对。"
+    }
+  ]
+}

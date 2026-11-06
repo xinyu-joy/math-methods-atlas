@@ -1,0 +1,286 @@
+{
+  "methods": [],
+  "books": [
+    {
+      "id": "Q001",
+      "type": "book",
+      "title": "Quantum Theory for Mathematicians",
+      "authors": [
+        "Brian C. Hall"
+      ],
+      "year": "2013",
+      "edition": "1",
+      "publisher": "Springer, Graduate Texts in Mathematics 267",
+      "doi": "10.1007/978-1-4614-7116-5",
+      "isbn": "978-1-4614-7116-5",
+      "url": "https://link.springer.com/book/10.1007/978-1-4614-7116-5",
+      "openUrl": "",
+      "level": "基础",
+      "reason": "官方目录把谱理论分为有界与无界情形，并单列 Lie 群、角动量和复合系统，适合数学背景读者建立量子问题的分析与表示论语言。选择依据为官方目录与读者要求，不以销量判断。",
+      "prerequisites": "实分析、L² 空间和线性代数；后部几何章节需要流形。",
+      "limitations": "本次只核对出版社目录与介绍，未读本书证明。它提供学习路线，不能代替本页具体量子信道陈述的正文依据。",
+      "locators": [
+        "目录第6—10章：谱理论（印刷页123—226）",
+        "目录第16章：Lie Groups, Lie Algebras, and Representations（333—366）",
+        "目录第19章：Systems and Subsystems, Multiple Particles（419—440）"
+      ],
+      "supports": [
+        "MSC81 的谱理论、对称性和复合系统阅读路径"
+      ],
+      "access": "contents",
+      "readScope": "读取官方书目信息、简介和相关章节目录；章节正文未取得。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "Q002",
+      "type": "book",
+      "title": "The Theory of Quantum Information",
+      "authors": [
+        "John Watrous"
+      ],
+      "year": "2018",
+      "edition": "作者公开手稿（与出版书的页码可能不同）",
+      "publisher": "Cambridge University Press",
+      "doi": "",
+      "isbn": "",
+      "url": "https://cs.uwaterloo.ca/~watrous/TQI/",
+      "openUrl": "https://cs.uwaterloo.ca/~watrous/TQI/TQI.2.pdf",
+      "level": "核心",
+      "reason": "作者提供逐章手稿、勘误和目录；第2章以线性映射的几种表示建立信道语言，适合把量子可行性问题转成矩阵约束。相较物理入门书，这一入口更集中于有限维信息处理。",
+      "prerequisites": "复向量空间、张量积、矩阵正定性与线性映射。",
+      "limitations": "这里只阅读第2章的表示与完全正性相关段落，未完成整本书阅读；作者注明手稿供个人使用，本站仅链接、不再分发。",
+      "locators": [
+        "作者手稿第2章 §2.2，Proposition 2.20、Theorem 2.22；印刷页80—83，PDF页23—26",
+        "本次读取 Choi 表示定义及完全正性的等价条件；未通读信道容量章节"
+      ],
+      "supports": [
+        "MSC81 信道—Choi 半正定矩阵的有限维结构联系"
+      ],
+      "access": "excerpt",
+      "readScope": "实际读取第2章的 Choi/Kraus 表示和 Theorem 2.22 陈述，检查有限维前提；未完整复核七个等价条件的证明。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "Q003",
+      "type": "book",
+      "title": "Foundations of Quantum Theory: From Classical Concepts to Operator Algebras",
+      "authors": [
+        "Klaas Landsman"
+      ],
+      "year": "2017",
+      "edition": "1",
+      "publisher": "Springer, Fundamental Theories of Physics 188",
+      "doi": "10.1007/978-3-319-51777-3",
+      "isbn": "978-3-319-51777-3",
+      "url": "https://link.springer.com/book/10.1007/978-3-319-51777-3",
+      "openUrl": "https://link.springer.com/content/pdf/10.1007/978-3-319-51777-3.pdf",
+      "level": "研究",
+      "reason": "官方目录把有限维、一般 Hilbert 空间、对称性和经典极限联系起来，并列出算子代数附录。适合作为离开有限维模型后的研究阅读路线；开放获取便于后续逐章阅读。",
+      "prerequisites": "线性代数与分析；进入一般 Hilbert 空间与算子代数需要泛函分析。",
+      "limitations": "本次核对书目、目录、开放获取说明及第2章网页摘要，没有把整本开放可下载等同于已读。作者对基础问题的立场也不能自动当作学界共识。",
+      "locators": [
+        "目录：Quantum mechanics on a finite-dimensional Hilbert space，39—81",
+        "目录：Quantum physics on a general Hilbert space，103—123；Symmetry in quantum mechanics，125—188",
+        "目录：Limits: large N，293—331"
+      ],
+      "supports": [
+        "MSC81 从有限维到无限维、从矩阵到算子代数的后续阅读路线"
+      ],
+      "access": "contents",
+      "readScope": "官方目录、书目和章节摘要已读；全书正文尚未读，未复核一般 Hilbert 空间定理。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "Q004",
+      "type": "notes",
+      "title": "Lecture Notes for Ph219/CS219, Chapter 2: Foundations I: States and Ensembles",
+      "authors": [
+        "John Preskill"
+      ],
+      "year": "2015",
+      "edition": "July 2015 更新版",
+      "publisher": "California Institute of Technology",
+      "doi": "",
+      "isbn": "",
+      "url": "https://www.preskill.caltech.edu/ph229/",
+      "openUrl": "https://www.preskill.caltech.edu/ph219/chap2_15.pdf",
+      "level": "基础",
+      "reason": "公开课程正文从复合系统引入密度算符，单量子比特的 Bloch 球例子可作为检查正性约束的最小模型。",
+      "prerequisites": "复矩阵、特征值、张量积和迹。",
+      "limitations": "只读取 §2.3 的相关段落，不覆盖完整测量论；Bloch 球参数化是单量子比特特例，不能直接替代高维正性检查。",
+      "locators": [
+        "§2.3.1 密度算符的自伴、正性和单位迹，印刷页20",
+        "§2.3.2 Bloch sphere，式(2.70)，印刷页21—22，PDF页21—22"
+      ],
+      "supports": [
+        "MSC81 单量子比特状态空间例子与正性条件"
+      ],
+      "access": "excerpt",
+      "readScope": "实际读取密度算符性质和 Bloch 球推导段落；独立检查本页参数例子的特征值。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "Q005",
+      "type": "notes",
+      "title": "Lecture Notes for Ph219/CS219, Chapter 7: Quantum Error Correction",
+      "authors": [
+        "John Preskill"
+      ],
+      "year": "2026",
+      "edition": "课程入口列为 March 2026；文件 chap7_26_6A.pdf",
+      "publisher": "California Institute of Technology",
+      "doi": "",
+      "isbn": "",
+      "url": "https://www.preskill.caltech.edu/ph219/chap7_26_6A.pdf",
+      "openUrl": "https://www.preskill.caltech.edu/ph219/chap7_26_6A.pdf",
+      "level": "研究",
+      "reason": "更新后的公开讲义提供稳定子码的二元辛表示，可把量子对易性转成有限域上的双线性约束，适合连接代数和量子纠错。",
+      "prerequisites": "Pauli 算符、有限域线性代数、量子误差与稳定子码基础。",
+      "limitations": "本次只读 §7.10.2，不等于通读新版纠错讲义，也不代表完成近期量子纠错论文的系统综述。",
+      "locators": [
+        "§7.10.2 Symplectic Notation，式(7.129)—(7.135)，印刷页30—31，PDF页36—37"
+      ],
+      "supports": [
+        "MSC81 稳定子码与二元辛线性代数的已知联系"
+      ],
+      "access": "excerpt",
+      "readScope": "实际读取 Pauli 二元表示、乘法和对易条件段落；没有检查全部代码构造和容错阈值。",
+      "checkedAt": "2026-11-06"
+    }
+  ],
+  "subjectGuides": {
+    "81": {
+      "overview": "量子理论的数学任务至少包含三种不同问题：用状态和观测量表达实验概率；分析动力学、能谱与对称性；研究带噪信息处理的可行性与资源。有限维系统常以向量、密度矩阵和线性映射为对象，连续变量和场论则还需要算子的定义域、谱与极限。选择工具时先固定系统维数、允许操作和希望得到的结论，再判断应使用谱分析、凸约束、表示论还是动力学方法。",
+      "questions": [
+        "状态估计得到的矩阵是否满足正性和单位迹？满足这些代数条件与实验上能够准确制备是不同问题。",
+        "一个噪声过程是否保持所有复合系统的物理状态？有限维情形可通过 Choi 表示检查完全正性；仅检查输入系统上的正性不够。",
+        "如何把量子纠错中的 Pauli 对易关系变成可计算的代数条件？稳定子表示提供有限域上的辛正交约束。",
+        "如何处理无限维模型中的无界 Hamilton 算符、谱和动力学？这些条件不能由有限矩阵算例直接保证。"
+      ],
+      "branches": [
+        "状态、观测与量子概率：密度算符、复合系统和测量。",
+        "谱、对称性与数学物理：自伴算子、群表示、经典极限。",
+        "量子信息与带噪计算：量子信道、纠缠、纠错和资源限制。"
+      ],
+      "prerequisites": [
+        "入口：复线性代数、特征值与特征向量、概率、张量积和迹。",
+        "矩阵优化路线：凸集、半正定矩阵和线性等式约束；先区分状态变量与控制参数。",
+        "无限维路线：Hilbert 空间、算子定义域和泛函分析；不跳过自伴性条件。"
+      ],
+      "approaches": [
+        {
+          "name": "先识别有限维状态的凸结构",
+          "purpose": "检查候选密度矩阵的物理可行性，区分纯态和混合态。单量子比特 ρ=(I+r·σ)/2 的特征值为 (1±|r|)/2：r=(0,0,3/5) 时为4/5、1/5；若改为r=(0,0,6/5)，出现−1/10，迹仍为1但已不是状态。依据 Preskill §2.3.2。",
+          "conditions": "仅讨论单量子比特参数例子。高维密度矩阵仍需直接检查 Hermitian、半正定和单位迹。",
+          "methodIds": [
+            "M012",
+            "M024"
+          ]
+        },
+        {
+          "name": "Choi 表示连接量子信道与半正定约束",
+          "purpose": "把有限维完全正线性映射的条件写成 Choi 矩阵半正定；增加迹保持的线性约束后，可为信道可行性建模。依据 Watrous 第2章的表示与完全正性条件。",
+          "conditions": "有限维复空间，固定 Choi 的张量与归一化约定；目标函数和其他约束还需分别判断是否凸。SOS 是多项式证书分支，不是所有信道优化必需的步骤。",
+          "methodIds": [
+            "M024",
+            "M026"
+          ]
+        },
+        {
+          "name": "Pauli 对易关系转成二元辛线性代数",
+          "purpose": "用二元向量表示 Pauli 算符，并用辛内积检查稳定子生成元的对易性。依据 Preskill §7.10.2，这是已有结构联系，可为纠错构造提供计算入口。",
+          "conditions": "需要跟踪 Pauli 相位、生成元独立性及稳定子群条件。对易性检查并不自动给出码距或高效解码。",
+          "methodIds": [
+            "M002",
+            "M004"
+          ]
+        },
+        {
+          "name": "谱与对称性阅读路线",
+          "purpose": "将能谱、角动量和复合系统问题与谱理论、Lie 群及表示联系起来。Hall 的目录为学习路线提供定位，具体定理还需后续正文核查。",
+          "conditions": "先区分有限维、有界算子和无界算子；不同情形的自伴性与定义域要求不同。",
+          "methodIds": [
+            "M004",
+            "M012"
+          ]
+        }
+      ],
+      "reading": [
+        {
+          "title": "入门｜Preskill, States and Ensembles",
+          "url": "https://www.preskill.caltech.edu/ph219/chap2_15.pdf",
+          "locator": "§2.3.1—2.3.2，密度算符与 Bloch 球，印刷页20—22",
+          "note": "已读相关正文并复算本页两个参数例子；未通读全章。书籍来源库 Q004。"
+        },
+        {
+          "title": "数学核心路线｜Hall, Quantum Theory for Mathematicians",
+          "url": "https://link.springer.com/book/10.1007/978-1-4614-7116-5",
+          "locator": "第6—10章谱理论、第16章 Lie 理论、第19章复合系统",
+          "note": "本次只核对官方目录及介绍，推荐章节尚未精读。来源 Q001。"
+        },
+        {
+          "title": "信息理论核心｜Watrous, The Theory of Quantum Information",
+          "url": "https://cs.uwaterloo.ca/~watrous/TQI/TQI.2.pdf",
+          "locator": "第2章 §2.2，Proposition 2.20 与 Theorem 2.22",
+          "note": "已读表示与完全正性相关正文；没有完整复核所有等价条件的证明。来源 Q002。"
+        },
+        {
+          "title": "研究阅读｜Landsman, Foundations of Quantum Theory",
+          "url": "https://link.springer.com/book/10.1007/978-3-319-51777-3",
+          "locator": "有限维与一般 Hilbert 空间、对称性及大N极限相关章节",
+          "note": "官方开放获取书目及目录已核对；本次未读全书正文。来源 Q003。"
+        },
+        {
+          "title": "纠错研究入口｜Preskill, Quantum Error Correction",
+          "url": "https://www.preskill.caltech.edu/ph219/chap7_26_6A.pdf",
+          "locator": "§7.10.2，式(7.129)—(7.135)，印刷页30—31",
+          "note": "已读二元辛表示段落。课程入口列为2026年更新；只把它视为更新后的讲义，不冒充前沿论文综述。来源 Q005。"
+        }
+      ],
+      "progress": "本页建立三条有正文依据的接口：状态—凸矩阵集合、信道—半正定表示、稳定子—有限域辛结构。它们是已知联系。后续可检查具体量子任务的额外约束是否保留这些结构；这只是研究准备任务，未作新颖性判断。",
+      "boundaries": "本批聚焦有限维状态、信道和稳定子语言；未覆盖量子场论、完整开放系统理论、量子控制与传感的独立方法样板，也未系统检索最新研究论文。目录书目与已读正文分别标记。",
+      "next": [
+        "以 Choi 可行性为下一个具体方法样板，固定张量约定并加入迹保持的完整例算。",
+        "核查量子控制、参数估计和纠错各自的任务假设与核心书籍章节。",
+        "补无界算子和连续变量内容时，先查定义域与自伴性，再讨论谱或演化。"
+      ]
+    }
+  },
+  "retrievalLog": [
+    {
+      "date": "2026-11-06",
+      "query": "Hall Quantum Theory for Mathematicians Springer; Landsman Foundations of Quantum Theory Springer",
+      "urls": [
+        "https://link.springer.com/book/10.1007/978-1-4614-7116-5",
+        "https://link.springer.com/book/10.1007/978-3-319-51777-3"
+      ],
+      "result": "官方书目与目录可读；Hall为订阅内容；Landsman标记开放获取。未批量下载或声称已读全书。"
+    },
+    {
+      "date": "2026-11-06",
+      "query": "Watrous author book page; Preskill course chapters",
+      "urls": [
+        "https://cs.uwaterloo.ca/~watrous/TQI/",
+        "https://www.preskill.caltech.edu/ph229/"
+      ],
+      "result": "按作者入口读取第2章的指定正文片段；Preskill第7章读取§7.10.2。引用具体片段而非整章。"
+    },
+    {
+      "date": "2026-11-06",
+      "query": "MSC official current classification",
+      "urls": [
+        "https://msc2020.org/",
+        "https://mathscinet.ams.org/msc/msc.html"
+      ],
+      "result": "官方入口使用MSC2020；本批保留现有63个两位分类，不声称覆盖全部下级方向。"
+    },
+    {
+      "date": "2026-11-06",
+      "query": "live subject 81 through web reader",
+      "urls": [
+        "https://xinyu-joy.github.io/math-methods-atlas/subjects/81/index.html"
+      ],
+      "result": "网页读取工具返回不可访问；改为审计本地已发布源码，发布后另做浏览器检查。"
+    }
+  ]
+}

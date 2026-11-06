@@ -1,0 +1,1087 @@
+{
+  "methods": [
+    {
+      "id": "D001",
+      "slug": "banach-contraction",
+      "familyId": "M014",
+      "name": "Banach 压缩映射原理与 Picard 迭代",
+      "english": "Banach contraction principle and Picard iteration",
+      "aliases": [
+        "Banach 不动点定理",
+        "压缩映射定理",
+        "逐次逼近法"
+      ],
+      "subjects": [
+        "47",
+        "46",
+        "34",
+        "65"
+      ],
+      "problemTags": [
+        "存在性",
+        "唯一性",
+        "迭代收敛",
+        "误差界",
+        "非线性方程"
+      ],
+      "summary": "当方程能改写成自映射的不动点问题，而且在明确的完备度量空间中，该映射统一地把任意两点的距离缩小一个小于一的比例，Banach 原理同时给出解的存在、唯一性、任意初值迭代的收敛与可计算误差界。本页只讨论这一经典版本，并用积分方程完整核算 Picard 迭代。研究中真正费力的往往是选择空间、证明不变性和找出有效压缩常数；仅观察数值收敛，或只在猜测解附近检查导数，都不足以代替这些条件。",
+      "keywords": [
+        {
+          "zh": "不动点",
+          "en": "fixed point",
+          "type": "研究对象",
+          "definition": "满足 T(x*)=x* 的点，对应重新表达后的原方程解。"
+        },
+        {
+          "zh": "完备度量空间",
+          "en": "complete metric space",
+          "type": "关键假设",
+          "definition": "每个 Cauchy 序列都在所选空间内收敛，保证迭代极限不逃出允许集合。"
+        },
+        {
+          "zh": "自映射",
+          "en": "self-map",
+          "type": "关键假设",
+          "definition": "T 把 X 中每个点映回 X，保证所有迭代始终有定义。"
+        },
+        {
+          "zh": "压缩常数",
+          "en": "contraction factor",
+          "type": "关键假设",
+          "definition": "统一适用于全部 x,y 的 q<1；局部导数小于一不自动给出全域的 q。"
+        },
+        {
+          "zh": "Picard 迭代",
+          "en": "Picard iteration",
+          "type": "算法",
+          "definition": "反复执行 x(n+1)=T(xn)，以固定映射生成逐次逼近。"
+        },
+        {
+          "zh": "先验误差界",
+          "en": "a priori error bound",
+          "type": "结论",
+          "definition": "由 q、步数和首次增量预先给出可保证的误差上界。"
+        },
+        {
+          "zh": "后验误差界",
+          "en": "a posteriori error bound",
+          "type": "结论",
+          "definition": "用当前相邻两次迭代的距离判断是否达到目标精度。"
+        },
+        {
+          "zh": "残差",
+          "en": "fixed-point residual",
+          "type": "可计算证书",
+          "definition": "d(z,Tz) 衡量违反不动点方程的程度；除以 1-q 才成为解误差保证。"
+        },
+        {
+          "zh": "上确界范数",
+          "en": "supremum norm",
+          "type": "空间选择",
+          "definition": "取连续函数在区间上绝对值的最大值，用于控制整条曲线的统一误差。"
+        },
+        {
+          "zh": "不变集合",
+          "en": "invariant set",
+          "type": "建模步骤",
+          "definition": "满足 T(X)⊆X 的集合，常用闭球与区间限制构造。"
+        },
+        {
+          "zh": "线性收敛",
+          "en": "linear convergence",
+          "type": "收敛性质",
+          "definition": "每次迭代的误差至多乘 q；q 接近一时保证成立但可能很慢。"
+        }
+      ],
+      "prerequisites": {
+        "intuition": [
+          "函数迭代、几何级数与基本微积分",
+          "把方程改写为 x=T(x) 的经验"
+        ],
+        "proof": [
+          "度量空间、Cauchy 序列与完备性",
+          "一致收敛和连续函数空间的完备性",
+          "Lipschitz 估计与积分性质"
+        ]
+      },
+      "sections": [
+        {
+          "id": "problem",
+          "title": "它解决什么问题",
+          "paragraphs": [
+            "目标是求解非线性方程、积分方程或函数空间中的自洽关系，同时回答解是否存在、是否唯一、如何逐步逼近、停止时误差多大。方法把四个问题归结为同一个距离收缩估计，适合需要定量保证的研究。",
+            "应用前先写出未知对象和允许集合。例如微分方程的未知量是整条函数曲线，不能直接把有限维数列的直觉当作证明。换一种等价方程或范数可能改善压缩性，但必须重新验证完备性、解的对应关系与自映射条件。"
+          ],
+          "formulas": [],
+          "steps": [],
+          "sourceIds": [
+            "B001"
+          ]
+        },
+        {
+          "id": "statement",
+          "title": "精确版本与全部条件",
+          "paragraphs": [
+            "设 (X,d) 是非空完备度量空间，T:X→X，存在同一个实数 0≤q<1，使所有 x,y∈X 满足下式。则存在唯一 x*∈X 满足 T(x*)=x*；对每个 x0∈X，递推 x(n+1)=T(xn) 都收敛到 x*。不要求 X 紧致、有限维、线性或凸，也不要求 T 可微。",
+            "先验界对 n≥0 成立，后验界对 n≥1 成立。残差界对任意 z∈X 成立，因此不仅用于精确迭代，也可检查候选解。q=0 时 T 为常值映射，一步即可到达不动点；n=0 的零次幂按一解释。"
+          ],
+          "formulas": [
+            "d(Tx,Ty)\\le q\\,d(x,y),\\qquad 0\\le q<1.",
+            "d(x_n,x^*)\\le \\frac{q^n}{1-q}d(x_1,x_0),\\qquad d(x_n,x^*)\\le\\frac{q}{1-q}d(x_n,x_{n-1}).",
+            "d(z,x^*)\\le\\frac{d(z,Tz)}{1-q}."
+          ],
+          "steps": [],
+          "sourceIds": [
+            "B001"
+          ]
+        },
+        {
+          "id": "mechanism",
+          "title": "为什么距离收缩能给出解",
+          "paragraphs": [
+            "第一步不是假设极限存在，而是控制相邻增量：第 n 次增量不超过首次增量的 q 的 n 次方。对从 n 到 m 的增量求和，几何级数尾项趋于零，迭代成为 Cauchy 序列。完备性恰好把这种内部一致的逼近转化为 X 内的极限。",
+            "压缩映射必连续，可把极限通过 T，得到不动点。若有两个不动点，它们的距离既等于映射后距离，又至多是自身的 q 倍，只能为零。残差界来自三角不等式，把 q·d(z,x*) 移到左边即可；这也说明 q 接近一时小残差可能仍对应较大误差。"
+          ],
+          "formulas": [
+            "d(x_m,x_n)\\le\\sum_{j=n}^{m-1}q^j d(x_1,x_0)\\le\\frac{q^n}{1-q}d(x_1,x_0)."
+          ],
+          "steps": [],
+          "sourceIds": [
+            "B001"
+          ]
+        },
+        {
+          "id": "workflow",
+          "title": "把具体课题变成可验证的迭代",
+          "paragraphs": [
+          "这个顺序适用于证明与数值实现。理论上的精确 T 与程序近似计算的 T 必须区别：离散化、积分近似或舍入会引入额外误差，不能只用相邻迭代变小来宣布成功。 还应报告误差界在哪个范数中成立。例如函数在有限网格点上的误差小，不代表区间上确界误差小；若算法只保留网格值，需额外插值与稳定性分析。证明中的存在性、离散算法的稳定性和实现的舍入误差是三个需要分别验证的环节。"
+          ],
+          "formulas": [],
+          "steps": [
+            "定义 X、距离与原方程，证明不动点和原解的对应；若 X 是闭子集，说明它所在空间完备。",
+            "证明 T 对 X 内所有对象都有定义且 T(X)⊆X；检查积分、边界条件及取值范围。",
+            "给出覆盖整个 X 的 q<1，不能只抽样估计若干点的局部斜率。",
+            "选择初值，记录增量或残差，用后验界判断是否达到指定容差。",
+            "若每步近似误差不超过 η，误差至多为 q 倍旧误差加 η；保留 η/(1-q) 的误差底限。"
+          ],
+          "sourceIds": [
+            "B001"
+          ]
+        },
+        {
+          "id": "example",
+          "title": "完整算例：积分迭代得到指数函数",
+          "paragraphs": [
+            "取 X=C([0,1/2],ℝ)，d(u,v)=∥u-v∥∞，定义 (Tu)(t)=1+∫₀ᵗu(s)ds。连续函数的积分仍连续，所以 T 是自映射；一致范数下 X 完备。对任意 u,v，积分估计给出 ∥Tu-Tv∥∞≤(1/2)∥u-v∥∞，故 q=1/2。",
+            "从 u0(t)=1 开始，逐次积分得到 u1=1+t、u2=1+t+t²/2，归纳得到 un 的有限指数级数。固定函数满足 u(0)=1、u′=u；直接代入可验证 eᵗ 是不动点，因此唯一解就是 eᵗ，无须先对未知极限求导。",
+            "n=4 时，u4(1/2)=211/128=1.6484375。正项级数余项随 t 增加，故统一误差在右端达到最大，为 e^(1/2)-211/128≈0.000283770700128。首次增量范数为 1/2，先验界为 1/16；相邻增量为 1/384，后验界为 1/384。再算残差 ∥Tu4-u4∥∞=1/3840，得到更紧的误差界 1/1920。三个界均有效，但都不等于实际误差。"
+          ],
+          "formulas": [
+            "u_n(t)=\\sum_{k=0}^{n}\\frac{t^k}{k!},\\quad \\|u_n-u_{n-1}\\|_\\infty=\\frac{2^{-n}}{n!}.",
+            "\\|Tu_n-u_n\\|_\\infty=\\frac{2^{-(n+1)}}{(n+1)!},\\quad \\|u_n-e^{(\\cdot)}\\|_\\infty\\le\\frac{2^{-n}}{(n+1)!}."
+          ],
+          "steps": [],
+          "sourceIds": [
+            "B001"
+          ]
+        },
+        {
+          "id": "limits",
+          "title": "失效例与不能省略的假设",
+          "paragraphs": [
+            "去掉完备性：令 X=(0,1]，T(x)=x/2。它是压缩常数为 1/2 的自映射，迭代却趋向不在 X 中的零，所以 X 内没有不动点。去掉严格压缩：在 ℝ 上令 T(x)=x+1，它是 1-Lipschitz 自映射而没有不动点；恒等映射则有无穷多个不动点。",
+            "去掉自映射也不行：T(x)=x/2 在 [1,2] 上虽然收缩，第一次迭代就可能离开集合。找不到 q<1 只表示这个版本不能作证，并不表示原方程无解或其他迭代必不收敛。局部压缩仅保证已验证的不变区域内的结论。"
+          ],
+          "formulas": [],
+          "steps": [],
+          "sourceIds": [
+            "B001"
+          ]
+        },
+        {
+          "id": "comparison",
+          "title": "怎样与相邻方法选择",
+          "paragraphs": [
+            "Brouwer、Schauder 路线利用拓扑、凸性与紧致性保证存在，通常不给这里的唯一性与逐次迭代速度；不能把任一不动点定理都当成数值算法。若已有强单调性或凸变分结构，单调算子或变分方法可能更自然。",
+            "Newton 法利用导数信息，在合适非退化解附近能更快，但需要额外光滑性和初值控制。压缩原理可证明某个 Newton 映射在指定区域可靠，却不自动带来二次收敛。研究选型应比较可证明的条件、常数与每步成本，而不是只比较方法名称。"
+          ],
+          "formulas": [],
+          "steps": [],
+          "sourceIds": [
+            "B001",
+            "B002"
+          ]
+        },
+        {
+          "id": "transfer",
+          "title": "跨领域迁移：保留什么结构",
+          "paragraphs": [
+            "微分方程迁移的关键是把局部时间区间缩短，使积分产生的时间长度乘 Lipschitz 常数小于一；算例展示了这一机制。若延长到大区间，需另做延拓与解的先验有界性分析。",
+            "有限状态折扣动态规划也有相同结构：有界即时奖励、有限非空动作集合、概率转移和折扣 0≤γ<1 时，Bellman 最优算子的两次输出在最大范数下相差不超过 γ∥v-w∥∞。这是由加权平均与取最大值的非扩张性直接推出的迁移示例；γ=1 的平均回报问题不能照搬。"
+          ],
+          "formulas": [
+            "(Bv)(s)=\\max_a\\{r(s,a)+\\gamma\\sum_z P(z\\mid s,a)v(z)\\},\\qquad\\|Bv-Bw\\|_\\infty\\le\\gamma\\|v-w\\|_\\infty."
+          ],
+          "steps": [],
+          "sourceIds": [
+            "B001"
+          ]
+        },
+        {
+          "id": "frontier",
+          "title": "研究延伸与阅读路线的边界",
+          "paragraphs": [
+            "经典定理本身已经成熟。可据此形成的研究问题包括：能否构造更合适但仍完备的度量以改善收缩常数；能否在计算预算下给出近似算子的误差证书；弱化压缩后还保留哪种收敛性质。这些是研究入口，不构成已验证的新颖选题。",
+            "先以 Lebl 的定理、证明和 Picard 应用建立基线；再用 Granas–Dugundji 的目录区分度量与拓扑不动点路线；Kirk–Shahzad 的非扩张映射、测地空间与距离空间章节引出进一步检索。本次只核对后两本书的官方书目与目录，没有逐章核验其定理，也没有系统评估最新论文的创新性。"
+          ],
+          "formulas": [],
+          "steps": [],
+          "sourceIds": [
+            "B001",
+            "B002",
+            "B003"
+          ]
+        }
+      ],
+      "reading": [
+        {
+          "sourceId": "B001",
+          "level": "入门",
+          "instruction": "实际阅读版本 6.3 的 §7.6.1，定理 7.6.2 及证明（正文 296–297），§7.6.2 的 Picard 应用（297–299）和练习 7.6.6、7.6.8；公开作者全文。"
+        },
+        {
+          "sourceId": "B002",
+          "level": "核心",
+          "instruction": "官方目录的 Elementary Fixed Point Theorems（9–84）与 Leray–Schauder Theory 是深化入口；本轮只核对书目、目录，未阅读付费正文。"
+        },
+        {
+          "sourceId": "B003",
+          "level": "研究",
+          "instruction": "官方目录 Nonexpansive Mappings and Zermelo’s Theorem（19–22）及后续测地空间部分用于规划阅读；本轮只有目录和简介，推广定理尚未核验。"
+        }
+      ],
+      "review": {
+        "textRead": true,
+        "hypothesesChecked": true,
+        "exampleRecomputed": true,
+        "scope": "读取作者教材 §7.6 的定理、证明、Picard 应用和相关练习；逐项核查条件，独立推导误差与迁移不等式，精确分数和浮点复核算例。",
+        "gaps": [
+          "两本 Springer 专著只核对书目、目录和简介",
+          "未做形式化证明或独立同行评审",
+          "未系统检索最新研究；迁移示例不表示真实应用已满足条件"
+        ],
+        "checkedAt": "2026-11-06"
+      },
+      "relatedFamilyIds": [
+        "M015",
+        "M018",
+        "M025",
+        "M030"
+      ],
+      "exampleChecks": [
+        {
+          "description": "u4(1/2)",
+          "expected": "211/128 = 1.6484375"
+        },
+        {
+          "description": "统一实际误差",
+          "expected": "exp(0.5)-211/128 ≈ 0.00028377070012819416"
+        },
+        {
+          "description": "先验、后验、残差误差上界",
+          "expected": "1/16, 1/384, 1/1920；残差本身为 1/3840"
+        }
+      ]
+    },
+    {
+      "id": "D004",
+      "slug": "coupling-mixing",
+      "familyId": "M020",
+      "name": "有限状态 Markov 链的耦合与全变差收敛",
+      "english": "Coupling and total variation mixing for finite Markov chains",
+      "aliases": [
+        "Markov 链耦合",
+        "耦合不等式",
+        "混合时间上界",
+        "coupling inequality"
+      ],
+      "subjects": [
+        "60",
+        "68",
+        "82",
+        "65"
+      ],
+      "problemTags": [
+        "分布收敛",
+        "混合时间",
+        "随机采样",
+        "误差界",
+        "随机过程"
+      ],
+      "summary": "耦合通过让两条各自仍服从指定转移核的 Markov 链共享随机性，把分布之间难直接计算的距离变成两条路径尚未相遇的概率。本页限定有限状态、离散时间、齐次转移核，明确联合核的边缘约束、相遇后保持一致的条件，以及一致相遇概率怎样产生几何收敛。两状态算例同时计算合法联合核、稳态、耦合尾概率和精确混合时间，并展示周期性、错误边缘和过松耦合带来的失效。结论用于单时刻分布误差，不直接提供样本均值的置信区间。",
+      "keywords": [
+        {
+          "zh": "转移核",
+          "en": "transition kernel",
+          "type": "研究对象",
+          "definition": "有限状态下的行随机矩阵 P：P(x,z)≥0 且每行和为一，给出一步条件分布。"
+        },
+        {
+          "zh": "平稳分布",
+          "en": "stationary distribution",
+          "type": "目标对象",
+          "definition": "概率行向量 π 满足 πP=π；从 π 出发的每个时刻仍服从 π。"
+        },
+        {
+          "zh": "耦合",
+          "en": "coupling",
+          "type": "构造工具",
+          "definition": "在同一概率空间构造两个对象，同时保持各自指定的边缘分布。"
+        },
+        {
+          "zh": "Markovian 耦合核",
+          "en": "Markovian coupling kernel",
+          "type": "合法性条件",
+          "definition": "定义在状态对上的联合转移 Q，其两个行边缘分别为 P(x,·) 和 P(y,·)。"
+        },
+        {
+          "zh": "全变差距离",
+          "en": "total variation distance",
+          "type": "误差度量",
+          "definition": "有限状态上等于二分之一 L1 距离，也等于对所有事件概率差的最大值。"
+        },
+        {
+          "zh": "黏合耦合",
+          "en": "coalescent coupling",
+          "type": "路径条件",
+          "definition": "两链首次相遇后始终同步，才能把当前不同事件等同于首次相遇尚未发生。"
+        },
+        {
+          "zh": "耦合时间",
+          "en": "coupling time",
+          "type": "随机时间",
+          "definition": "本页指黏合构造下的首次相遇时间 τ，包括初始时刻已相等的情形。"
+        },
+        {
+          "zh": "不可约性",
+          "en": "irreducibility",
+          "type": "结构条件",
+          "definition": "任何状态都能经过若干步到达任何其他状态；有限状态时保证平稳分布唯一。"
+        },
+        {
+          "zh": "非周期性",
+          "en": "aperiodicity",
+          "type": "收敛条件",
+          "definition": "不可约链各状态返回时间的最大公约数为一，排除固定节律的振荡障碍。"
+        },
+        {
+          "zh": "混合时间",
+          "en": "mixing time",
+          "type": "复杂度量",
+          "definition": "最坏初值到平稳分布的 TV 距离降至指定 ε 以下所需的最小非负整数步数。"
+        },
+        {
+          "zh": "最大耦合",
+          "en": "maximal coupling",
+          "type": "优化构造",
+          "definition": "使指定两分布相等概率尽可能大的耦合；一步最大不自动意味着整条路径最优。"
+        },
+        {
+          "zh": "Dobrushin 系数",
+          "en": "Dobrushin contraction coefficient",
+          "type": "定量条件",
+          "definition": "各行分布之间最大的 TV 距离；小于一时给出统一的一步耦合收缩。"
+        }
+      ],
+      "prerequisites": {
+        "intuition": [
+          "有限概率分布、条件概率和随机矩阵",
+          "随机模拟与重复独立抽样的区别"
+        ],
+        "proof": [
+          "联合分布与边缘分布",
+          "Markov 性、条件期望和几何尾概率",
+          "矩阵幂、平稳方程与全变差距离"
+        ]
+      },
+      "sections": [
+        {
+          "id": "problem",
+          "title": "要比较的究竟是什么",
+          "paragraphs": [
+            "设初始状态为 x，希望判断 n 步后 Pⁿ(x,·) 与平稳分布 π 相差多少。状态空间庞大时逐项求矩阵幂很难；耦合改为设计两条相关路径，一条从 x 出发，另一条从 π 出发，让它们尽快合流。关联可以很强，但任一条链自己的运行规律不能改变。",
+            "输出是单时刻分布的 TV 上界及最坏初值混合时间上界。它适用于采样器的初始化偏差分析；若目标是长期样本均值、置信区间或有效样本量，还需处理时间相关性，不能凭已经接近平稳就假设样本独立。"
+          ],
+          "formulas": [],
+          "steps": [],
+          "sourceIds": [
+            "B004"
+          ]
+        },
+        {
+          "id": "statement",
+          "title": "精确的核、边缘与收敛条件",
+          "paragraphs": [
+            "令 S 为有限非空集合，P 为固定行随机矩阵，π 为满足 πP=π 的概率向量。构造 S×S 上的行随机核 Q，要求以下两个边缘等式对每个状态成立。并要求从对角线状态 (z,z) 只能转移到 (w,w)，概率为 P(z,w)。从 X0=x、Y0∼π 出发，两条边缘都是 P 链，且相遇后一直一致。",
+            "设 τ=inf{n≥0:Xn=Yn}，则 TV(Pⁿ(x,·),π)≤Pr(τ>n)。若每个非对角线状态下一步相遇概率至少为 ε0，其中 0<ε0≤1，就有 Pr(τ>n)≤Pr(X0≠Y0)(1-ε0)ⁿ。该定量条件强于不可约非周期；后者在有限状态时保证某个 P 的幂全正，可用于多步收缩。基本耦合不等式本身不依赖不可约性；不可约性用于 π 的唯一性。 混合精度取 0<ε<1；若从未达到阈值，约定混合时间为无穷。"
+          ],
+          "formulas": [
+            "\\sum_{y'}Q((x,y),(x',y'))=P(x,x'),\\qquad\\sum_{x'}Q((x,y),(x',y'))=P(y,y').",
+            "\\|\\mu-\\nu\\|_{\\rm TV}=\\frac12\\sum_{z\\in S}|\\mu(z)-\\nu(z)|=\\max_{A\\subseteq S}|\\mu(A)-\\nu(A)|.",
+            "d(n)=\\max_x\\|P^n(x,\\cdot)-\\pi\\|_{\\rm TV},\\qquad t_{\\rm mix}(\\varepsilon)=\\min\\{n\\ge0:d(n)\\le\\varepsilon\\}."
+          ],
+          "steps": [],
+          "sourceIds": [
+            "B004"
+          ]
+        },
+        {
+          "id": "mechanism",
+          "title": "从事件比较到几何衰减",
+          "paragraphs": [
+            "对任意事件 A，两个指示函数只有在 Xn≠Yn 时才可能不同，因此概率差的绝对值不超过 Pr(Xn≠Yn)。对 A 取最大便得 TV 上界。第二条链保持平稳，其边缘恰为 π；构造黏合使当前不同等同于 τ>n。若没有黏合，只能用当前不同概率，不能直接替换成首次相遇尾概率。",
+            "条件于尚未相遇及当前状态，下一步仍未相遇的概率至多 1-ε0；迭代条件概率便得几何界，不要求各次尝试独立。最大一步耦合的相遇概率是两行共同质量之和，因此 δ(P)<1 给出 ε0=1-δ(P)。δ(P)=1 时该一步估计没有信息，不能据此宣布不混合。"
+          ],
+          "formulas": [
+            "\\delta(P)=\\max_{x,y}\\|P(x,\\cdot)-P(y,\\cdot)\\|_{\\rm TV}=1-\\min_{x,y}\\sum_z\\min\\{P(x,z),P(y,z)\\}.",
+            "\\Pr(\\tau>n+1)\\le(1-\\varepsilon_0)\\Pr(\\tau>n)."
+          ],
+          "steps": [],
+          "sourceIds": [
+            "B004",
+            "B005"
+          ]
+        },
+        {
+          "id": "workflow",
+          "title": "怎样构造一个可用的耦合",
+          "paragraphs": [
+            "共享随机数只是构造途径，合法性来自边缘核等式。对复杂采样器，应先验证每个更新步骤，再分析相遇事件；观察两次模拟接近不能证明 TV 变小。"
+          ],
+          "formulas": [],
+          "steps": [
+            "写出 S、固定转移 P 与候选 π，检验每行和及 πP=π；说明是否需要唯一性及全时刻收敛。",
+            "定义 Q 或共同随机数更新函数，逐项检验两个边缘与对角线黏合。",
+            "估计相遇时间尾概率；无法一步一致相遇时，尝试多步耦合或可比较的状态距离。",
+            "把尾界转成 d(n) 上界，明确 ε、最坏初值与每步的实际计算成本。",
+            "用小规模精确矩阵幂检查边缘与上界；若声称阶数最优，还需独立的混合下界。"
+          ],
+          "sourceIds": [
+            "B004"
+          ]
+        },
+        {
+          "id": "example",
+          "title": "完整算例：共享一个均匀随机数",
+          "paragraphs": [
+            "取 S={0,1}，P 的两行为 (3/4,1/4) 和 (1/2,1/2)。解 πP=π 得 π=(2/3,1/3)。所有转移概率为正，因此不可约、非周期。每步独立取 U∼Unif[0,1]：当前为 0 时，下一状态在 U≤1/4 时等于 1，否则为 0；当前为 1 时用阈值 1/2。两链共享同一个 U，边缘对应 P，相遇后自动同步。",
+            "按状态对 (00,01,10,11) 排列，Q 如下。非对角线行下一步合流到 00 的概率为 1/2、到 11 为 1/4，继续不同的概率为 1/4。从不同状态出发 Pr(τ>n)=4⁻ⁿ。若 X0=0、Y0∼π，初始不同概率为 1/3；若 X0=1，则为 2/3。",
+            "还能直接核对上界是否尖锐。令 pn=Pr(Xn=1)，由 P 得 p(n+1)=1/4+pn/4，故 pn=1/3+(p0-1/3)4⁻ⁿ。两状态 TV 就是 |pn-1/3|，恰好达到耦合界。因此 d(n)=(2/3)4⁻ⁿ，d(1)=1/6、d(3)=1/96、d(4)=1/384；精度 ε=1/4 时恰需一步，ε=1/100 时恰需四步。“恰需”来自精确分布计算，并非仅由耦合上界推出。"
+          ],
+          "formulas": [
+            "P=\\begin{pmatrix}3/4&1/4\\\\1/2&1/2\\end{pmatrix},\\quad Q=\\begin{pmatrix}3/4&0&0&1/4\\\\1/2&1/4&0&1/4\\\\1/2&0&1/4&1/4\\\\1/2&0&0&1/2\\end{pmatrix}.",
+            "p_n=\\frac13+\\left(p_0-\\frac13\\right)4^{-n},\\qquad d(n)=\\frac23\\,4^{-n}."
+          ],
+          "steps": [],
+          "sourceIds": [
+            "B004"
+          ]
+        },
+        {
+          "id": "limits",
+          "title": "失效例：周期性与不合法的合流",
+          "paragraphs": [
+            "周期性反例：P=((0,1),(1,0)) 不可约，π=(1/2,1/2)，但从确定状态出发总在两点间交替，每个时刻距 π 的 TV 都为 1/2。两条从不同点开始的合法链永远不能相遇。加入停留概率可改变周期性，却也改变原核，必须重新说明研究对象。",
+            "错误构造：强行令两条链下一步都等于 X 的更新结果，确实立刻相遇，但当当前状态不同且 P 的两行不同时，Y 的边缘已被篡改。相遇后继续独立运行，再拿首次相遇时间作界也不成立，因为可能重新分开。即使合法，耦合也可能很松：对所有行都等于 π 的一步刷新链，独立耦合在一步后仍可能不同，实际 TV 却已为零。"
+          ],
+          "formulas": [],
+          "steps": [],
+          "sourceIds": [
+            "B004"
+          ]
+        },
+        {
+          "id": "comparison",
+          "title": "与谱方法、距离收缩和下界互补",
+          "paragraphs": [
+            "耦合把上界建立在可解释的路径构造上，适合局部更新与组合状态空间；但漂亮的构造未必给出尖锐常数。可逆链的谱方法利用加权内积中的算子结构，与本例第二特征值 1/4 的衰减相呼应；一般非可逆情形不能直接套同一套自伴谱公式。",
+            "路径耦合与 Wasserstein 距离可先控制相邻状态距离，再传播到全部状态，但必须写明路径度量及转换到目标误差的条件。研究 cutoff 或混合时间最优阶数，还需瓶颈、特征函数或其他下界。一次模拟成功相遇或一个几何上界都不足以证明 cutoff。"
+          ],
+          "formulas": [],
+          "steps": [],
+          "sourceIds": [
+            "B004",
+            "B005"
+          ]
+        },
+        {
+          "id": "transfer",
+          "title": "迁移到采样、统计物理和算法",
+          "paragraphs": [
+            "MCMC 中先验证目标分布对所用核平稳，再用耦合估计初始化步数。对于有界观测量 f，两分布 TV≤ε 可推出期望差≤2∥f∥∞ε；若 0≤f≤1，可改进到 ε。这是由 TV 定义导出的迁移，仍不是多次相关采样的统计置信保证。",
+            "局部更新的自旋或着色模型可共享更新位置和随机数，研究分歧如何消失；不同温度、图结构或约束密度下效果可能完全不同。组合采样算法要同时评估一步代价与混合步数。无限状态、连续时间和非齐次核需要新增条件，本页有限齐次版本不覆盖它们。"
+          ],
+          "formulas": [],
+          "steps": [],
+          "sourceIds": [
+            "B004",
+            "B005",
+            "B006"
+          ]
+        },
+        {
+          "id": "frontier",
+          "title": "研究入口与尚未核验的范围",
+          "paragraphs": [
+            "成熟部分是耦合不等式、有限不可约非周期链的收敛理论与本页的一步共同质量估计。后续可研究具体链族中耦合界与谱界的差距、多步耦合是否改善维数依赖、怎样配套下界；必须指定链族及参数区间，不能把通用方法组合直接称为新成果。",
+            "先读 Levin–Peres 第 4、5 章证明，再以第 14 章路径耦合、第 18 章 cutoff 为目录入口；Brémaud 第二版衔接耦合、Dobrushin 系数与 Monte Carlo，Norris 补足基础结构。本轮没有系统阅读最新论文，目录只能证明某主题被讨论，不能证明前沿结论或某选题尚未解决。"
+          ],
+          "formulas": [],
+          "steps": [],
+          "sourceIds": [
+            "B004",
+            "B005",
+            "B006"
+          ]
+        }
+      ],
+      "reading": [
+        {
+          "sourceId": "B004",
+          "level": "核心",
+          "instruction": "作者第二版公开稿：实际阅读 §4.1–4.3，命题 4.7、定理 4.9，以及 §5.1–5.2 的式 (5.2)、定理 5.4、推论 5.5（正文 47–52、60–62）；第 14、18 章本轮只定位目录。"
+        },
+        {
+          "sourceId": "B005",
+          "level": "研究",
+          "instruction": "官方与 ETH 目录核对 §4.1 Coupling（145 起）、§4.3.1 Convergence Rates via Coupling（157 起）、§4.3.4 Dobrushin’s Ergodic Coefficient（163 起），再规划第 9、11 章；本轮未读书内证明。"
+        },
+        {
+          "sourceId": "B006",
+          "level": "入门",
+          "instruction": "先读第 1 章 Discrete-time Markov chains，再按需转向第 4 章 Further theory；官方目录与书目已核对，正文需合法获取，本轮未阅读其证明。"
+        }
+      ],
+      "review": {
+        "textRead": true,
+        "hypothesesChecked": true,
+        "exampleRecomputed": true,
+        "scope": "实际阅读作者公开第二版中的 TV、最大耦合、有限链收敛与黏合耦合定理相关正文；逐项审查联合核边缘与对角线，独立构造并用有理数核算两状态例的矩阵幂、TV 和混合时间。",
+        "gaps": [
+          "Brémaud 与 Norris 只核查官方书目及目录，未读正文定理",
+          "没有形式化验证或独立同行评审",
+          "未系统检索最新混合时间研究；前沿只列需继续核验的入口"
+        ],
+        "checkedAt": "2026-11-06"
+      },
+      "relatedFamilyIds": [
+        "M012",
+        "M021",
+        "M027"
+      ],
+      "exampleChecks": [
+        {
+          "description": "P 的平稳分布",
+          "expected": "π=(2/3,1/3)，πP=π"
+        },
+        {
+          "description": "按 00,01,10,11 排列的 Q 行边缘",
+          "expected": "第一边缘 P(x,·)，第二边缘 P(y,·)；对角线状态无离开对角线的转移"
+        },
+        {
+          "description": "最坏初值全变差",
+          "expected": "d(n)=(2/3)4^(-n)；n=0..4 为 2/3,1/6,1/24,1/96,1/384"
+        },
+        {
+          "description": "精确混合时间",
+          "expected": "t_mix(1/4)=1；t_mix(1/100)=4"
+        },
+        {
+          "description": "周期二状态翻转链",
+          "expected": "所有 n≥0，确定初值的 TV=1/2"
+        }
+      ]
+    }
+  ],
+  "books": [
+    {
+      "type": "book",
+      "doi": "",
+      "isbn": "",
+      "openUrl": "https://www.jirka.org/ra/realanal.pdf",
+      "edition": "version 6.3, May 15, 2026",
+      "checkedAt": "2026-11-06",
+      "id": "B001",
+      "title": "Basic Analysis I: Introduction to Real Analysis, Volume I",
+      "authors": [
+        "Jiří Lebl"
+      ],
+      "year": "2026",
+      "publisher": "作者公开教材",
+      "url": "https://www.jirka.org/ra/",
+      "level": "基础",
+      "reason": "公开作者教材提供压缩原理的条件、证明与函数空间应用，建立本页的可核验基线。",
+      "prerequisites": "实分析、级数、连续性与度量空间。",
+      "limitations": "本轮仅读指定节与练习，未通读全书；网页 PDF 会更新，故同时记录版本日期。",
+      "locators": [
+        "版本页：May 15, 2026，version 6.3",
+        "§7.6.1，定理 7.6.2，正文 296–297",
+        "§7.6.2 Picard 应用，正文 297–299",
+        "§7.6.3，练习 7.6.6 与 7.6.8，正文 300"
+      ],
+      "supports": [
+        "D001 statement",
+        "D001 mechanism",
+        "D001 workflow",
+        "D001 example 的通用 Picard 构造，具体参数和数值为独立推导",
+        "D001 limits"
+      ],
+      "access": "chapter",
+      "readScope": "实际读取 §7.6 压缩定理证明、Picard 构造与相关练习公开正文；未将整本计为已读。"
+    },
+    {
+      "type": "book",
+      "doi": "10.1007/978-0-387-21593-8",
+      "isbn": "978-0-387-00173-9",
+      "openUrl": "",
+      "edition": "1",
+      "checkedAt": "2026-11-06",
+      "id": "B002",
+      "title": "Fixed Point Theory",
+      "authors": [
+        "Andrzej Granas",
+        "James Dugundji"
+      ],
+      "year": "2003",
+      "publisher": "Springer New York",
+      "url": "https://link.springer.com/book/10.1007/978-0-387-21593-8",
+      "level": "核心",
+      "reason": "将度量不动点放回拓扑不动点理论，帮助识别只保存在性的方法分支。",
+      "prerequisites": "一般拓扑、泛函分析；深入章节另需代数拓扑。",
+      "limitations": "仅核对官方书目、简介和目录，未读付费章节证明。",
+      "locators": [
+        "官方目录：Elementary Fixed Point Theorems，9–84",
+        "官方目录：Leray–Schauder Theory，249–368",
+        "官方书目信息：作者、版次、DOI、ISBN"
+      ],
+      "supports": [
+        "D001 comparison 的阅读分支",
+        "D001 frontier 的后续入口"
+      ],
+      "access": "contents",
+      "readScope": "核对题名、章节页段与书目；不声称核验本书具体定理正文。"
+    },
+    {
+      "type": "book",
+      "doi": "10.1007/978-3-319-10927-5",
+      "isbn": "978-3-319-10926-8",
+      "openUrl": "",
+      "edition": "1",
+      "checkedAt": "2026-11-06",
+      "id": "B003",
+      "title": "Fixed Point Theory in Distance Spaces",
+      "authors": [
+        "William Kirk",
+        "Naseer Shahzad"
+      ],
+      "year": "2014",
+      "publisher": "Springer Cham",
+      "url": "https://link.springer.com/book/10.1007/978-3-319-10927-5",
+      "level": "研究",
+      "reason": "为非扩张映射及经典压缩之外的度量结构提供索引，供已有基础者定向深化。",
+      "prerequisites": "度量空间、经典不动点理论；测地几何章节需相应背景。",
+      "limitations": "仅官方目录与简介；推广主题不能当成已证明的可迁移结论。",
+      "locators": [
+        "官方目录：Caristi’s Theorem and Extensions，7–18",
+        "官方目录：Nonexpansive Mappings and Zermelo’s Theorem，19–22",
+        "官方书目：第 1 版、2014、DOI、ISBN"
+      ],
+      "supports": [
+        "D001 frontier 的主题入口"
+      ],
+      "access": "contents",
+      "readScope": "阅读官方书目、简介与目录，未读推广定理的条件和证明。"
+    },
+    {
+      "type": "book",
+      "doi": "10.1090/mbk/107",
+      "isbn": "978-1-4704-2962-1",
+      "openUrl": "https://pages.uoregon.edu/dlevin/MARKOV/markovmixing.pdf",
+      "edition": "2",
+      "checkedAt": "2026-11-06",
+      "id": "B004",
+      "title": "Markov Chains and Mixing Times, Second Edition",
+      "authors": [
+        "David A. Levin",
+        "Yuval Peres",
+        "Elizabeth L. Wilmer（contributor）"
+      ],
+      "year": "2017",
+      "publisher": "American Mathematical Society",
+      "url": "https://www.ams.org/books/mbk/107/",
+      "level": "核心",
+      "reason": "把 TV、合法耦合与混合时间联系起来；作者大学页面公开稿使核心证明可核验。",
+      "prerequisites": "本科概率、线性代数与条件概率。",
+      "limitations": "仅读相关定义、命题和证明；公开稿与出版社页码可能不同。AMS 书页返回 403，年份、ISBN 另由 AMS 2017 年 9 月 Notices 的 MBK/107 书讯核对；DOI 见官方搜索记录。",
+      "locators": [
+        "作者大学页明确 Second Edition、作者与 contributor",
+        "公开稿 §4.1–4.3：命题 4.7、定理 4.9，正文 47–52",
+        "公开稿 §5.1–5.2：式 (5.2)、定理 5.4、推论 5.5，正文 60–62",
+        "公开稿第 14、18 章只定位目录",
+        "AMS Notices 2017/09：MBK/107 书讯与 ISBN"
+      ],
+      "supports": [
+        "D004 statement",
+        "D004 mechanism",
+        "D004 limits",
+        "D004 example 的耦合原理，具体核及数值为独立推导",
+        "D004 comparison 的学习入口"
+      ],
+      "access": "chapter",
+      "readScope": "实际读公开稿 TV 定义、最大耦合命题、有限链收敛定理和黏合耦合上界；未通读全书。"
+    },
+    {
+      "type": "book",
+      "doi": "10.1007/978-3-030-45982-6",
+      "isbn": "978-3-030-45981-9",
+      "openUrl": "https://toc.library.ethz.ch/objects/pdf03/e01_978-3-030-45982-6_01.pdf",
+      "edition": "2",
+      "checkedAt": "2026-11-06",
+      "id": "B005",
+      "title": "Markov Chains: Gibbs Fields, Monte Carlo Simulation and Queues",
+      "authors": [
+        "Pierre Brémaud"
+      ],
+      "year": "2020",
+      "publisher": "Springer Cham",
+      "url": "https://link.springer.com/book/10.1007/978-3-030-45982-6",
+      "level": "研究",
+      "reason": "衔接长期行为、耦合、Dobrushin 系数与 Monte Carlo，适合规划应用深化路线。",
+      "prerequisites": "概率论、Markov 链基础与线性代数。",
+      "limitations": "openUrl 是 ETH 图书馆目录，不是全文；正文定理未核验。",
+      "locators": [
+        "官方书目：第 2 版、2020、DOI、ISBN",
+        "ETH 目录：§4.1.1 Convergence in Variation，145；§4.1.2 The Coupling Method，149",
+        "ETH 目录：§4.3.1 Convergence Rates via Coupling，157；§4.3.4 Dobrushin’s Ergodic Coefficient，163",
+        "官方目录：Convergence Rates，289–329；Monte Carlo Markov Chains，369–398"
+      ],
+      "supports": [
+        "D004 mechanism 的 Dobrushin 延伸阅读（本页公式另由共同质量直接推导）",
+        "D004 comparison",
+        "D004 transfer",
+        "MSC60 阅读路线"
+      ],
+      "access": "contents",
+      "readScope": "核对 Springer 书目、章节目录与 ETH 七页目录；未读章节证明。"
+    },
+    {
+      "type": "book",
+      "doi": "10.1017/CBO9780511810633",
+      "isbn": "9780521633963",
+      "openUrl": "",
+      "edition": "",
+      "checkedAt": "2026-11-06",
+      "id": "B006",
+      "title": "Markov Chains",
+      "authors": [
+        "J. R. Norris"
+      ],
+      "year": "1997",
+      "publisher": "Cambridge University Press",
+      "url": "https://www.cambridge.org/core/books/markov-chains/A3F966B10633A32C8F06F37158031739",
+      "level": "基础",
+      "reason": "作为基础补课路线，区分离散与连续时间链，把平稳性和长期行为放回完整链理论。",
+      "prerequisites": "基础概率论；较深章节需测度与条件期望。",
+      "limitations": "只核查官方书目、简介和目录，没有读取付费正文。",
+      "locators": [
+        "官方书目：1997 年印刷版、DOI、Paperback ISBN",
+        "官方目录：第 1 章 Discrete-time Markov chains",
+        "官方目录：第 4 章 Further theory；第 5 章 Applications"
+      ],
+      "supports": [
+        "D004 transfer 的基础阅读背景",
+        "D004 frontier 的阅读路线",
+        "MSC60 导读"
+      ],
+      "access": "contents",
+      "readScope": "核对 Cambridge 官方书页、Frontmatter 页与目录标题，未读具体定理证明。"
+    }
+  ],
+  "subjectGuides": {
+    "47": {
+      "overview": "算子理论把矩阵推广为函数空间上的变换，研究可逆性、谱、迭代与非线性方程。科研选题应先说明空间、定义域与拓扑：有限维矩阵直觉在无界算子和无限维极限中可能失效。本轮深入补入 Banach 压缩这一可核验的非线性工具，其他路线作为进一步阅读入口。",
+      "questions": [
+        "方程 Au=f 或 T(u)=u 在什么空间中存在、唯一且稳定？",
+        "算子的谱、预解式与长期演化或迭代速度有什么关系？",
+        "离散近似是否保留算子结构，误差在何种范数中可控？"
+      ],
+      "branches": [
+        "有界线性算子、谱理论与紧算子",
+        "无界算子、半群与演化问题",
+        "非线性算子、不动点与迭代"
+      ],
+      "approaches": [
+        {
+          "name": "压缩映射与逐次逼近",
+          "purpose": "同时证明不动点存在、唯一性与迭代误差界；D001 提供完整条件和算例。",
+          "conditions": "非空完备度量空间上的自映射，以及覆盖全部允许对象的 q<1。",
+          "methodIds": [
+            "M014"
+          ]
+        },
+        {
+          "name": "谱与预解式分析",
+          "purpose": "将可逆性、模态响应和迭代稳定性转成谱或预解式估计。",
+          "conditions": "先区分有界与无界算子；自伴谱结论要求对应 Hilbert 空间及定义域条件。",
+          "methodIds": [
+            "M012"
+          ]
+        },
+        {
+          "name": "Krylov 子空间求解离散算子方程",
+          "purpose": "大型稀疏离散系统中以矩阵向量乘生成近似解，衔接连续模型与计算。",
+          "conditions": "算法依赖对称性、正定性或预条件质量；矩阵残差需稳定性估计才可控制连续解误差。",
+          "methodIds": [
+            "M030",
+            "M029"
+          ]
+        }
+      ],
+      "reading": [
+        {
+          "title": "Lebl, Basic Analysis I",
+          "url": "https://www.jirka.org/ra/realanal.pdf",
+          "locator": "版本 6.3，§7.6，定理 7.6.2 与 Picard 应用",
+          "note": "实际阅读指定正文与证明，不代表覆盖算子理论。"
+        },
+        {
+          "title": "Granas–Dugundji, Fixed Point Theory",
+          "url": "https://link.springer.com/book/10.1007/978-0-387-21593-8",
+          "locator": "官方目录：Elementary Fixed Point Theorems；Leray–Schauder Theory",
+          "note": "只核对书目和目录，为非线性路线提供入口。"
+        }
+      ],
+      "boundaries": "深读仅覆盖经典压缩映射。谱定理、无界算子、C* 代数与单调算子尚无对应深度页，不能将本页视为 MSC47 全景综述。",
+      "next": [
+        "为有界自伴算子谱定理补独立方法页和明确的 Hilbert 空间条件",
+        "选一个离散边值问题，对照迭代残差与真实解误差",
+        "围绕具体算子族记录压缩常数随参数变化"
+      ],
+      "prerequisites": [
+        "线性代数与实分析",
+        "Banach/Hilbert 空间及收敛拓扑",
+        "微分算子另需 Sobolev 空间和定义域意识"
+      ],
+      "progress": "经典压缩原理已有成熟证明与误差界。本轮核查条件并重算例子；改善具体模型的度量、预条件或非精确迭代保证仍是需文献核查的研究入口。"
+    },
+    "60": {
+      "overview": "概率论研究随机分布、依赖结构、极限与过程。科研中需区分单时刻分布、路径性质和统计估计误差。耦合提供跨域接口：保持边缘不变而重新安排联合随机性，把分布比较转成路径比较；本轮深读限定有限状态 Markov 链。",
+      "questions": [
+        "随机过程在何种条件下趋于平稳，收敛要多久？",
+        "相关样本或随机算法偏离均值的概率如何控制？",
+        "怎样通过可构造的联合模型比较两个分布、过程或近似？"
+      ],
+      "branches": [
+        "分布、极限定理与集中不等式",
+        "Markov 过程、鞅与随机演化",
+        "随机结构、采样算法与统计物理模型"
+      ],
+      "approaches": [
+        {
+          "name": "黏合耦合与混合时间",
+          "purpose": "用合法边缘和相遇时间尾概率控制全变差距离；D004 提供精确算例。",
+          "conditions": "指定齐次核，检验联合核边缘和黏合；几何速率另需定量相遇条件。",
+          "methodIds": [
+            "M020"
+          ]
+        },
+        {
+          "name": "浓缩与尾概率估计",
+          "purpose": "从矩条件、有界性或依赖结构估计大偏差，控制算法失败率与统计误差。",
+          "conditions": "匹配独立性、鞅差或所用依赖条件；平稳并不等于独立。",
+          "methodIds": [
+            "M021",
+            "M020"
+          ]
+        },
+        {
+          "name": "概率法构造存在性证据",
+          "purpose": "以随机抽样、期望或尾界证明组合对象存在，再探索有效构造算法。",
+          "conditions": "明确概率模型；正概率存在不自动给出高效寻找方法。",
+          "methodIds": [
+            "M009",
+            "M021"
+          ]
+        }
+      ],
+      "reading": [
+        {
+          "title": "Levin–Peres, Markov Chains and Mixing Times, Second Edition",
+          "url": "https://pages.uoregon.edu/dlevin/MARKOV/markovmixing.pdf",
+          "locator": "§4.1–4.3、§5.1–5.2，命题 4.7，定理 4.9、5.4",
+          "note": "实际阅读指定正文和证明，其他章节未通读。"
+        },
+        {
+          "title": "Brémaud, Markov Chains, 2nd ed.",
+          "url": "https://link.springer.com/book/10.1007/978-3-030-45982-6",
+          "locator": "第 4 章 Long-Run Behavior；第 9 章 Convergence Rates",
+          "note": "官方书目与目录已核对，具体定理未读。"
+        },
+        {
+          "title": "Norris, Markov Chains",
+          "url": "https://www.cambridge.org/core/books/markov-chains/A3F966B10633A32C8F06F37158031739",
+          "locator": "第 1 章 Discrete-time Markov chains；第 4 章 Further theory",
+          "note": "仅核查官方目录与简介，作为基础路线。"
+        }
+      ],
+      "boundaries": "不覆盖概率论全部方向；无限状态常返性、连续时间过程、随机微分方程、极限交换与统计置信推断都需要独立条件与来源。",
+      "next": [
+        "对同一链族并列制作耦合上界、谱界和混合下界",
+        "增加样本均值方差算例，区别于初始化偏差",
+        "为可数状态链补常返性及漂移条件深读页"
+      ],
+      "prerequisites": [
+        "概率空间与条件概率",
+        "线性代数、矩阵幂与平稳方程",
+        "深入随机过程需测度论与条件期望"
+      ],
+      "progress": "有限链耦合不等式与不可约非周期收敛理论已成熟。本轮复核可精确求解的模型；高维采样、临界参数和 cutoff 的具体前沿仍需限定链族并核查最新文献。"
+    }
+  },
+  "retrievalLog": [
+    {
+      "url": "https://www.jirka.org/ra/",
+      "status": "success",
+      "readScope": "作者教材版本与全文入口",
+      "note": "随后读取作者 PDF 指定章节。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://www.jirka.org/ra/realanal.pdf",
+      "status": "success",
+      "readScope": "版本页与 §7.6 的正文和证明",
+      "note": "version 6.3；May 15, 2026。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://link.springer.com/book/10.1007/978-0-387-21593-8",
+      "status": "success",
+      "readScope": "书目、简介与目录",
+      "note": "没有读取付费正文。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://link.springer.com/book/10.1007/978-3-319-10927-5",
+      "status": "success",
+      "readScope": "书目、简介与目录",
+      "note": "没有读取付费正文。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://pages.uoregon.edu/dlevin/MARKOV/",
+      "status": "success",
+      "readScope": "作者、Second Edition 与公开稿入口",
+      "note": "与公开 PDF 核对版次。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://pages.uoregon.edu/dlevin/MARKOV/markovmixing.pdf",
+      "status": "success",
+      "readScope": "§4.1–4.3 和 §5.1–5.2 的指定定义、命题、证明",
+      "note": "其他研究章节仅核对目录。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://doi.org/10.1090/MBK/107",
+      "status": "failed",
+      "readScope": "官方 DOI 页面",
+      "note": "打开返回 403；官方搜索结果可见 DOI 与书名，数学依据改用作者公开稿。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://www.ams.org/books/mbk/107/",
+      "status": "failed",
+      "readScope": "官方书页",
+      "note": "打开返回 403；ISBN、年份另由官方 Notices 书讯核对。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://www.ams.org/notices/201709/201709FullIssue.pdf",
+      "status": "success",
+      "readScope": "MBK/107 书讯、年份与 ISBN",
+      "note": "仅使用相关书目信息，没有归纳整期刊物。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://link.springer.com/book/10.1007/978-3-030-45982-6",
+      "status": "success",
+      "readScope": "官方书目、目录与简介",
+      "note": "D004 的 Springer 选书；未读章节证明。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://toc.library.ethz.ch/objects/pdf03/e01_978-3-030-45982-6_01.pdf",
+      "status": "success",
+      "readScope": "七页目录，定位 §4.1 与 §4.3",
+      "note": "此 PDF 是目录，不是正文。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://www.cambridge.org/core/books/markov-chains/A3F966B10633A32C8F06F37158031739",
+      "status": "success",
+      "readScope": "官方书目、简介与目录",
+      "note": "无正文证明核验。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://www.cambridge.org/core/books/abs/markov-chains/frontmatter/57508F4FBB577EEAFC3658C153CBBDB5",
+      "status": "success",
+      "readScope": "出版年份、作者、DOI 与目录导航",
+      "note": "仅页面公开元数据。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://www.cambridge.org/core/books/abs/markov-chains/contents/4317118585A7BB0057F767A33630C54C",
+      "status": "success",
+      "readScope": "目录页面与书目导航",
+      "note": "没有获取本书正文。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://link.springer.com/book/10.1007/978-1-4612-1236-2",
+      "status": "failed",
+      "readScope": "候选书 Coupling, Stationarity, and Regeneration 官方页",
+      "note": "不可访问，未作为已核查书籍纳入。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://link.springernature.com/book/10.1007/978-1-4612-1236-2",
+      "status": "failed",
+      "readScope": "同候选书的出版社域名入口",
+      "note": "仍不可访问，未绕过限制。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://link.springer.com/book/10.1007/978-1-4757-3128-1",
+      "status": "failed",
+      "readScope": "未确认的候选书链接",
+      "note": "不可访问，且书目未证实；弃用，没有作为来源或结论。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://store.doverpublications.com/products/9780486153247",
+      "status": "partial",
+      "readScope": "候选 Lectures on the Coupling Method 商品页",
+      "note": "页面抽取仅站点结构，无法核对书目与目录，未纳入所选书。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://www.statslab.cam.ac.uk/~grg1000/teaching/markovc.html",
+      "status": "failed",
+      "readScope": "候选大学课程入口",
+      "note": "超时，没有作为正文证据。",
+      "checkedAt": "2026-11-06"
+    }
+  ]
+}
+

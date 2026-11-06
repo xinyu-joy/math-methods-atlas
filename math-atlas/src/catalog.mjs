@@ -1,15 +1,18 @@
 import {methods,subjects,snapshotDate} from './data.mjs';
 import {aliases,intuitions} from './editorial.mjs';
-import {subjectGuides} from './subject-guides.mjs';
+import {subjectGuides as legacyGuides} from './subject-guides.mjs';
+import {expandedGuides,deepMethods} from './deep-catalog.mjs';
 import {methodReferences} from './method-references.mjs';
 import {claims,bridges} from './verified-claims.mjs';
 
-export const version='0.2';
-export {subjectGuides,methodReferences,claims,bridges};
+export const version='0.3';
+export const subjectGuides={...legacyGuides,...expandedGuides};
+export {methodReferences,claims,bridges};
 export const records=methods.map((m,i)=>({
   id:m[10],name:m[0],problem:m[1],description:m[2],conditions:m[3],
   guarantee:m[4],limits:m[5],example:m[6],subjects:m[7].split(';'),
   evidence:m[8],source:m[9]||null,aliases:aliases[Number(m[10].slice(1))-1],intuition:intuitions[Number(m[10].slice(1))-1],
+  concreteMethodIds:deepMethods.filter(d=>d.familyId===m[10]).map(d=>d.id),
   references:methodReferences[m[10]]||[],claimIds:claims.filter(c=>c.methodIds.includes(m[10])).map(c=>c.id),
   bridgeIds:bridges.filter(b=>b.methodIds.includes(m[10])).map(b=>b.id),
   theoremReview:'按具体结论记录；方法族未作整体核验',updated:snapshotDate

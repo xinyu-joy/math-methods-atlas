@@ -28,6 +28,9 @@ jobs:
         with:
           node-version: '22'
           package-manager-cache: false
+      - name: Install formula renderer
+        working-directory: math-atlas
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Generate static pages
         run: node math-atlas/scripts/build.mjs
       - name: Check page content and internal links

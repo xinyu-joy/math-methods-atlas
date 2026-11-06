@@ -1,0 +1,1178 @@
+{
+  "methods": [
+    {
+      "id": "D002",
+      "slug": "buchberger-elimination",
+      "familyId": "M005",
+      "name": "Buchberger 算法与 Gröbner 基消元",
+      "english": "Buchberger Algorithm and Gröbner Basis Elimination",
+      "aliases": [
+        "布赫贝格算法",
+        "格罗布纳基",
+        "理想消元",
+        "多项式正规形"
+      ],
+      "subjects": [
+        "13",
+        "14",
+        "12",
+        "68"
+      ],
+      "problemTags": [
+        "符号计算",
+        "理想成员判定",
+        "多项式方程",
+        "消元"
+      ],
+      "summary": "给定域上的有限组多项式，Buchberger 算法把生成元转换为可控制首项的 Gröbner 基。它能判定多项式是否属于给定理想；选用合适的消元项序，还能计算只含部分变量的全部代数后果。本页固定全局项序和精确域运算，完整计算一个二元例子，并区分理想消元、实际投影、实解求解和数值近似。算法会终止，但终止性并不保证大规模问题可承受，也不意味着消元方程的每个解都能提升为原系统的解。",
+      "keywords": [
+        {
+          "zh": "系数域",
+          "en": "coefficient field",
+          "type": "关键假设",
+          "definition": "允许非零系数相除的系数系统；本页例子使用有理数域，计算必须保持精确。"
+        },
+        {
+          "zh": "多项式理想",
+          "en": "polynomial ideal",
+          "type": "对象",
+          "definition": "由生成元的任意多项式线性组合组成；$\\langle f_1,\\ldots,f_s\\rangle$保留所有可由这些方程推出的多项式恒等关系。"
+        },
+        {
+          "zh": "全局项序",
+          "en": "global monomial order",
+          "type": "关键假设",
+          "definition": "单项式上的良序全序，与乘法相容，且1最小；它决定除法每一步消去哪一项。"
+        },
+        {
+          "zh": "字典序",
+          "en": "lexicographic order",
+          "type": "建模选择",
+          "definition": "按固定变量优先级逐个比较指数；x优先于y时，即使y次数很高，也小于含x的单项式。"
+        },
+        {
+          "zh": "首单项式与首项",
+          "en": "leading monomial and leading term",
+          "type": "定义",
+          "definition": "首单项式只含变量幂，首项还含其非零系数；构造S多项式时必须正确处理系数。"
+        },
+        {
+          "zh": "首项理想",
+          "en": "initial ideal",
+          "type": "证书",
+          "definition": "由理想内所有非零多项式的首单项式生成的单项式理想；它不是只看原始输入首项所得的理想。"
+        },
+        {
+          "zh": "Gröbner 基",
+          "en": "Gröbner basis",
+          "type": "核心对象",
+          "definition": "理想的一组有限生成元，其首单项式生成整个首项理想。"
+        },
+        {
+          "zh": "S 多项式",
+          "en": "S-polynomial",
+          "type": "算法操作",
+          "definition": "把两个多项式的首项提升到共同单项式后相减，以暴露首项抵消时隐藏的新约束。"
+        },
+        {
+          "zh": "正规形",
+          "en": "normal form",
+          "type": "计算输出",
+          "definition": "相对于Gröbner基，反复约去可整除首项后得到的唯一余式；普通生成集不保证唯一或成员判定。"
+        },
+        {
+          "zh": "消元理想",
+          "en": "elimination ideal",
+          "type": "输出对象",
+          "definition": "原理想与保留变量的多项式子环相交；描述只含保留变量的所有理想关系。"
+        },
+        {
+          "zh": "约化 Gröbner 基",
+          "en": "reduced Gröbner basis",
+          "type": "规范化",
+          "definition": "首项系数为1，且每个基元素的任何单项式都不能被其他元素的首单项式整除；固定项序后唯一。"
+        },
+        {
+          "zh": "证书",
+          "en": "certificate",
+          "type": "可复核结果",
+          "definition": "记录输入与输出生成元之间的线性组合，以及S多项式归零的等式；便于独立检查。"
+        }
+      ],
+      "prerequisites": {
+        "intuition": [
+          "一元多项式长除法与高斯消元",
+          "联立方程、复数和代入消元"
+        ],
+        "proof": [
+          "域、多项式环与理想",
+          "良序、整除关系和Noether升链条件",
+          "理想相交与商环的基本概念"
+        ]
+      },
+      "sections": [
+        {
+          "id": "problem",
+          "title": "要解决什么问题",
+          "paragraphs": [
+            "设研究模型给出若干精确多项式等式。常见任务有三种：判断一个候选关系是否已经由输入方程蕴含于理想；消去不可观测或辅助变量；把方程改写成便于求解的结构。它们共享同一个代数入口，但输出的含义不同。",
+            "本页讨论有限变量、域系数、交换多项式环。理想成员关系是多项式线性组合关系，不能直接等同于在实数解集上恒为零；后者牵涉实根理想等额外理论。输入含不等式、近似测量或分母时，首先要明确转换后是否改变问题。"
+          ],
+          "sourceIds": [
+            "A001",
+            "A005"
+          ]
+        },
+        {
+          "id": "statement",
+          "title": "可严格使用的命题",
+          "paragraphs": [
+            "设$k$为域，$I=\\langle f_1,\\ldots,f_s\\rangle\\subset k[x_1,\\ldots,x_n]$，输入生成元有限，固定全局项序。对当前基的S多项式做多元除法，并把非零余式加入；持续处理所有尚待检查的对。精确的Buchberger过程有限终止，输出$I$的Gröbner基。等价判据是所有S多项式均可约化到零。零理想单独以空基处理。",
+            "若项序为$x_1>\\cdots>x_n$的字典序，且$G$已是$I$的Gröbner基，则$G\\cap k[x_{\\ell+1},\\ldots,x_n]$是消元理想$I\\cap k[x_{\\ell+1},\\ldots,x_n]$的Gröbner基。此代数命题不要求$k$代数闭；把结果解释为解集投影时才需要另加几何论证。"
+          ],
+          "sourceIds": [
+            "A004",
+            "A005"
+          ],
+          "formulas": [
+            "S(f,g)=\\frac{m}{\\operatorname{LT}(f)}f-\\frac{m}{\\operatorname{LT}(g)}g,\\quad m=\\operatorname{lcm}(\\operatorname{LM}(f),\\operatorname{LM}(g))",
+            "f\\in I\\iff \\operatorname{NF}_G(f)=0"
+          ]
+        },
+        {
+          "id": "mechanism",
+          "title": "为什么算法能发现隐藏关系",
+          "paragraphs": [
+            "一元除法只面对一个首项方向，多元输入却可能在不同生成元之间发生首项抵消。S多项式把这种冲突显式化。非零余式的首单项式不能被已有首单项式整除，所以每次添加它都严格扩大当前的首项理想；Noether性排除了无限严格升链。",
+            "消元性质来自字典序的变量优先级。如果一个保留变量多项式属于理想，它的首项必须被某个基元素首项整除。该基元素便不可能再含优先级更高的被消变量，否则其首项也会含它。故只抽取保留变量的基元素就足以完成子环中的除法。这里说明的是证明机制，不能替代每个具体输入的运算核验。"
+          ],
+          "sourceIds": [
+            "A004",
+            "A005"
+          ]
+        },
+        {
+          "id": "workflow",
+          "title": "可以照做的计算流程",
+          "paragraphs": [
+            "先写清域、变量次序、要消去的变量和最终目标。若目标只是成员判定，未必需要字典序；如果目标是消元，就必须使用具有相应消元性质的项序。精确输入宜采用有理数或有限域运算。"
+          ],
+          "sourceIds": [
+            "A004"
+          ],
+          "steps": [
+            "保存原始生成元并删除零多项式；明确所有非零常数是否可逆。",
+            "维护待处理多项式对，构造S多项式并除以当前基；非零余式归一化后加入，同时登记新的对。",
+            "所有对处理完成后可做约化，保留生成元变换记录，避免只保存一个无法追溯的最终列表。",
+            "抽取仅含保留变量的基元素；解出候选值后代回原方程，而不是把消元理想的全部零点直接作为答案。",
+            "复核双向理想包含关系、所有S对的归零，以及最终解的代入；另报耗时、内存和系数增长。"
+          ]
+        },
+        {
+          "id": "example",
+          "title": "完整例子：消去 x 并保留证书",
+          "paragraphs": [
+            "在$\\mathbb Q[x,y]$中取$f_1=x^2-y$、$f_2=xy-1$，固定字典序$x>y$。首单项式是$x^2,xy$。第一对给$yf_1-xf_2=x-y^2=:g_1$。原始两项无法消去这个余式的首项$x$，因此必须添加新关系。",
+            "再消去$S(f_2,g_1)=f_2-yg_1=y^3-1=:g_2$。最终候选$G=\\{g_1,g_2\\}$首单项式为$x,y^3$，两项均首一，尾项也满足约化条件。下面四个等式同时证明新旧生成集生成同一理想，而不是只有相同的若干数值根。",
+            "最终唯一的S对满足$y^3g_1-xg_2=x-y^5=g_1-y^2g_2$，按$G$除法先去$g_1$再去$g_2$便归零。Buchberger判据于是确认候选确为基。消元理想为$\\langle y^3-1\\rangle$；它把二元问题降为一元多项式及回代关系$x=y^2$。",
+            "在$\\mathbb C$中，令$\\zeta$遍历三次单位根，解为$(\\zeta^2,\\zeta)$；代入有$x^2-y=\\zeta^4-\\zeta=0$及$xy-1=\\zeta^3-1=0$。在$\\mathbb R$和$\\mathbb Q$中只有$(1,1)$。计算域与所求根所在域要分别报告。此例的五项多项式证书已用整数系数字典运算逐项展开为零。"
+          ],
+          "sourceIds": [
+            "A004"
+          ],
+          "formulas": [
+            "g_1=yf_1-xf_2,\\qquad g_2=f_2-yg_1",
+            "f_1=(x+y^2)g_1+yg_2,\\qquad f_2=yg_1+g_2"
+          ]
+        },
+        {
+          "id": "limits",
+          "title": "明确会失败的用法",
+          "paragraphs": [
+            "把普通生成集当Gröbner基会误判：本例$h=x-y^2$确在$I$中，但用$\\{x^2-y,xy-1\\}$做除法得到非零余式$h$，因为$x$与$y^2$都不被$x^2$或$xy$整除。非零余式只有在基已被认证时才足以否定成员关系。",
+            "消元也不保证所有候选都能回代。考虑$\\langle xy-1\\rangle\\subset\\mathbb C[x,y]$，其与$\\mathbb C[y]$的交是零理想，零点集是整条复直线；原解的投影却只有$y\\ne0$。因此$y=0$是消元描述中的额外点。即使算法完全正确，投影解释仍可能错误。",
+            "终止不是可扩展性的承诺。次数、系数及中间项可能快速增长；局部项序、整数系数环或浮点零判断也不能直接套用本页版本。带参数问题若随意除以参数，会丢失参数为零的分支，必须单独分情形。"
+          ],
+          "sourceIds": [
+            "A004",
+            "A005",
+            "A003"
+          ]
+        },
+        {
+          "id": "comparison",
+          "title": "怎样与其他方法比较",
+          "paragraphs": [
+            "线性方程优先考虑高斯消元；少量变量的消元可比较结式；需要精确理想关系时，Gröbner基提供统一证书。要找近似复根可比较数值延拓，但数值根列表不能替代理想成员证明。这里的比较是任务选择建议，未做速度排名。",
+            "阅读上，IVA适合作第一本系统教材；Using Algebraic Geometry把方程求解与结式并列，适合比较工具；Greuel–Pfister适合进一步研究局部环、模及标准基。后两条延伸目前只核对官方目录，不把它们算作已读正文。"
+          ],
+          "sourceIds": [
+            "A001",
+            "A002",
+            "A003"
+          ]
+        },
+        {
+          "id": "transfer",
+          "title": "跨领域迁移：先检查表示是否忠实",
+          "paragraphs": [
+            "几何约束与机器人运动学可先形成多项式方程，消去中间坐标以寻找可达条件；这条连接在IVA目录有专章，但具体机构仍需处理分母、实数性和不等式。统计中的参数隐式化也可把观测映射写成方程再消元；得到代数关系尚不等于参数可识别性。",
+            "迁移到优化时，可研究把驻点方程交给符号消元，再用凸性或其他证书判断是否全局最优；迁移到平方和方法时，基可用于整理等式约束。两项均是下一步研究设计，未在本页验证具体模型、性能提升或新颖性。"
+          ],
+          "sourceIds": [
+            "A001",
+            "A002"
+          ],
+          "steps": [
+            "任务结构：多项式等式 → 核查域、分母与实解限制 → 选择消元变量 → 保留精确证书 → 回到原模型验证。"
+          ]
+        },
+        {
+          "id": "frontier",
+          "title": "已知基础与下一轮研究",
+          "paragraphs": [
+            "本页的Buchberger算法和消元定理是成熟基础。现代算法、项序转换以及稀疏结构利用值得深入，但不能仅因把经典算法放入新应用就宣称创新。IVA第5版提供后续算法章节；本轮只读到目录，没有核验其中每种方法的复杂度。",
+            "可执行的下一步是建立同一任务下的精确基线：固定输入域、稀疏度与消元目标，比较项序、基转换策略和证书大小；记录难例以及失败资源上限。是否存在某应用特有的结构优势，需要新一轮文献检索和可重复实验，当前标为未核验研究假设。"
+          ],
+          "sourceIds": [
+            "A001",
+            "A003"
+          ]
+        }
+      ],
+      "reading": [
+        {
+          "sourceId": "A004",
+          "level": "入门",
+          "instruction": "公开正文§1.3–1.7，尤其Theorem 1.7.2、Algorithm 1.7.3及终止性证明；本轮实际读取相关段落。"
+        },
+        {
+          "sourceId": "A001",
+          "level": "核心",
+          "instruction": "第5版Gröbner Bases pp.49–119、Elimination Theory pp.121–175；本轮核对出版社目录，完整章节需要合法访问。"
+        },
+        {
+          "sourceId": "A005",
+          "level": "核心",
+          "instruction": "课程第2章Theorem 2.1.8及Theorem 2.2.5；已读判据与消元陈述，注意其变量顺序记号与本页方向不同。"
+        },
+        {
+          "sourceId": "A002",
+          "level": "研究",
+          "instruction": "Solving Polynomial Equations pp.26–76、Resultants pp.77–136，比较求解工具；仅目录定位。"
+        },
+        {
+          "sourceId": "A003",
+          "level": "研究",
+          "instruction": "Rings, Ideals and Standard Bases pp.1–108，再选Modules；仅目录定位，不能据此直接使用局部标准基版本。"
+        }
+      ],
+      "review": {
+        "textRead": true,
+        "hypothesesChecked": true,
+        "exampleRecomputed": true,
+        "scope": "读取Jensen的S多项式判据、算法及终止性段落、消元命题，以及Winkler课程的相关命题；独立重算本页五个多项式证书与解的回代。未进行形式化证明或专家同行评审。",
+        "gaps": [
+          "Springer三本书本轮仅核对官方书目和目录，未读完整章节。",
+          "未审现代F4/F5等算法、局部标准基、数值误差或复杂度界。",
+          "跨领域迁移尚未验证具体模型与新颖性。"
+        ],
+        "checkedAt": "2026-11-06"
+      },
+      "relatedFamilyIds": [
+        "M003",
+        "M010",
+        "M024",
+        "M026"
+      ],
+      "exampleChecks": [
+        {
+          "description": "逐项展开 g1−(y f1−x f2)、g2−(f2−y g1)",
+          "expected": "两个多项式均恒等于0。"
+        },
+        {
+          "description": "逐项展开 f1−((x+y²)g1+y g2)、f2−(y g1+g2)",
+          "expected": "两个多项式均恒等于0，证明双向理想包含。"
+        },
+        {
+          "description": "展开 y³g1−xg2−g1+y²g2",
+          "expected": "恒等于0；最终S多项式按G约化到0。"
+        },
+        {
+          "description": "令 y³=1、x=y² 回代两条输入方程",
+          "expected": "x²−y=y(y³−1)=0，xy−1=y³−1=0；实数和有理数解均只有(1,1)。"
+        }
+      ]
+    },
+    {
+      "id": "D003",
+      "slug": "simplicial-homology",
+      "familyId": "M006",
+      "name": "有限单纯复形的域系数同调矩阵计算",
+      "english": "Matrix Computation of Simplicial Homology over a Field",
+      "aliases": [
+        "边界矩阵法",
+        "单纯同调",
+        "Betti数计算",
+        "链复形线性代数"
+      ],
+      "subjects": [
+        "55",
+        "65",
+        "68"
+      ],
+      "problemTags": [
+        "拓扑不变量",
+        "线性代数",
+        "结构识别",
+        "精确计算"
+      ],
+      "summary": "把有限单纯复形的顶点、边和高维面排列成链空间，再用带符号的边界矩阵记录面与边的关联。由于连续取两次边界为零，边界空间包含在闭链空间中，同调便成为两个线性空间的商。本页在域系数下以精确消元计算Betti数和代表闭链，完整演示一个四顶点复形在填入三角面前后的变化。输出描述所给复形，不自动说明原始数据的真实空间；系数域、构造尺度和是否存在高维面都会改变结论。",
+      "keywords": [
+        {
+          "zh": "抽象单纯复形",
+          "en": "abstract simplicial complex",
+          "type": "输入对象",
+          "definition": "有限顶点集合的一族有限子集，并对取非空子集封闭；三角面存在时，它的三条边和顶点必须存在。"
+        },
+        {
+          "zh": "单纯形",
+          "en": "simplex",
+          "type": "基本单元",
+          "definition": "含q+1个不同顶点的子集称q维单纯形；其维数比顶点个数少1。"
+        },
+        {
+          "zh": "定向",
+          "en": "orientation",
+          "type": "符号约定",
+          "definition": "顶点排列的偶置换视为同向、奇置换反向；固定顶点全序后可统一产生边界符号。"
+        },
+        {
+          "zh": "链空间",
+          "en": "chain vector space",
+          "type": "线性化对象",
+          "definition": "以所有q维单纯形为基的域上线性空间；链是带系数的形式组合。"
+        },
+        {
+          "zh": "边界算子",
+          "en": "boundary operator",
+          "type": "定义",
+          "definition": "交替删除一个顶点并求和的线性映射；连续取两次边界为零。"
+        },
+        {
+          "zh": "闭链",
+          "en": "cycle",
+          "type": "候选结构",
+          "definition": "边界为零的链；一条闭合回路是1维例子，但闭链未必代表非零同调类。"
+        },
+        {
+          "zh": "边界链",
+          "en": "boundary",
+          "type": "可消去结构",
+          "definition": "某个高一维链的边界；它一定是闭链，在同调中被视为零。"
+        },
+        {
+          "zh": "同调群／空间",
+          "en": "homology group / space",
+          "type": "输出对象",
+          "definition": "闭链空间对边界空间取商；本页域系数情形为向量空间。"
+        },
+        {
+          "zh": "Betti 数",
+          "en": "Betti number",
+          "type": "数值不变量",
+          "definition": "域系数同调空间的维数；必须连同次数和系数域一起报告。"
+        },
+        {
+          "zh": "代表闭链",
+          "en": "representative cycle",
+          "type": "可解释输出",
+          "definition": "一个同调类选定的闭链代表；加上边界后仍属同一类，故代表一般不唯一。"
+        },
+        {
+          "zh": "系数域",
+          "en": "coefficient field",
+          "type": "关键假设",
+          "definition": "决定加法、除法和秩的运算规则；在F2上正负号相同，在Q上保留方向符号。"
+        },
+        {
+          "zh": "过滤",
+          "en": "filtration",
+          "type": "延伸对象",
+          "definition": "一列逐渐增加单纯形的复形，用于跟踪同调类的出现和消失；不等于分别统计各层Betti数。"
+        }
+      ],
+      "prerequisites": {
+        "intuition": [
+          "图的连通分支、回路与三角形",
+          "矩阵的核、像和秩"
+        ],
+        "proof": [
+          "有限维向量空间和商空间",
+          "带符号求和与线性映射复合",
+          "有限单纯复形及其几何实现"
+        ]
+      },
+      "sections": [
+        {
+          "id": "problem",
+          "title": "输入和输出到底是什么",
+          "paragraphs": [
+            "目标是在有限组合结构中识别连通分支、不能被面填掉的回路以及更高维的同调类。输入是完整的单纯形列表或能够可靠展开该列表的表示；图的边列表并未自动规定三角面。把每个三角团填成面，是另一个明确的建模选择。",
+            "输出至少包括各维Betti数；需要解释几何位置时，还应输出代表闭链及其与边界空间的关系。算法只能精确回答输入复形的问题。若复形来自点云、网络或网格，采样误差、距离阈值和重建假设仍需单独检验。"
+          ],
+          "sourceIds": [
+            "A006",
+            "A007"
+          ]
+        },
+        {
+          "id": "statement",
+          "title": "域系数情形的严格命题",
+          "paragraphs": [
+            "设$K$为非空有限单纯复形，$k$为域，固定顶点全序。令$C_q(K;k)$以递增排列的$q$维单纯形为基，并取普通同调约定$C_{-1}=0$、$\\partial_0=0$。边界公式满足$\\partial_{q-1}\\partial_q=0$，故$H_q(K;k)=\\ker\\partial_q/\\operatorname{im}\\partial_{q+1}$有定义。",
+            "若$n_q$是$q$维单纯形数量，$B_q$是边界矩阵，则$\\beta_q=n_q-\\operatorname{rank}_k B_q-\\operatorname{rank}_k B_{q+1}$。精确域运算下，高斯消元有限终止并给出这些维数；进一步从核基中取边界空间的补空间，即可选取同调代表。这里不声称一个稠密实现是最快算法。"
+          ],
+          "sourceIds": [
+            "A006",
+            "A009"
+          ],
+          "formulas": [
+            "\\partial_q[v_0,\\ldots,v_q]=\\sum_{i=0}^{q}(-1)^i[v_0,\\ldots,\\widehat v_i,\\ldots,v_q],\\qquad q\\ge1",
+            "\\beta_q=\\dim_k H_q=n_q-\\operatorname{rank}_k B_q-\\operatorname{rank}_k B_{q+1}"
+          ]
+        },
+        {
+          "id": "mechanism",
+          "title": "为什么必须对边界取商",
+          "paragraphs": [
+            "一个高维单纯形的任意余维二面，会在“删掉第一个顶点再删第二个”和相反顺序中各出现一次，符号相反，因此两次边界相消。这不仅是拓扑直觉，也是检查程序组装是否正确的代数不变量。",
+            "由秩—零度定理，闭链维数为单纯形数减去本层边界矩阵的秩；但其中部分闭链已经由更高维面填充，还需减去上一层边界的像维数。只求一个矩阵的零空间会把可填掉的回路误算成洞。计算代表时，必须在同一链空间坐标下区分核基和边界基。"
+          ],
+          "sourceIds": [
+            "A006",
+            "A009"
+          ]
+        },
+        {
+          "id": "workflow",
+          "title": "从复形到可复核结果",
+          "paragraphs": [
+            "先明确使用普通还是约化同调、系数域以及最高需要计算的维数。即使只关心q维同调，也必须知道q+1维单纯形，否则无法判断哪些q维闭链已被填掉。"
+          ],
+          "sourceIds": [
+            "A009"
+          ],
+          "steps": [
+            "给顶点排序，生成并去重所有必要的面，检查对取面封闭；为各维单纯形固定编号。",
+            "按交替符号把每个q单纯形的各个面写入Bq的对应列；在F2上模2处理，在Q上用精确分数。",
+            "检查相邻边界矩阵乘积为零；若失败，先修复面索引、方向和系数规则。",
+            "计算Bq及Bq+1的精确秩，由维数公式求Betti数；代表闭链另用核与像的基计算。",
+            "检验候选代表确为闭链，并检验其模边界后的独立性；用Euler交错和作额外一致性检查。",
+            "连同单纯形列表、域和参数输出结果；不要把浮点近零阈值隐藏在秩计算中。"
+          ]
+        },
+        {
+          "id": "example",
+          "title": "完整例子：一个回路如何被填掉",
+          "paragraphs": [
+            "取顶点$0,1,2,3$；按顺序列出边$e=(01,12,23,03,02)$，先只加入三角面$012$及所有子面。使用$\\mathbb Q$系数、递增顶点定向，链空间维数为$(n_0,n_1,n_2)=(4,5,1)$。下面$B_1$的行按顶点排序，列按边排序；$B_2$只有一列。",
+            "由边界公式，$z_1=(1,1,0,0,-1)^T=\\partial[012]$；另一个闭链是$z_2=(0,0,1,-1,1)^T$，围绕缺失的三角面$023$。直接乘法得到$B_1z_1=B_1z_2=0$，两个向量线性独立。又$B_1$秩为3，故这两个向量恰好构成二维核的基。",
+            "$B_2$秩为1，边界空间由$z_1$生成；所以$H_1$由$[z_2]$生成，$[z_1]=0$。得到$(\\beta_0,\\beta_1,\\beta_2)=(1,1,0)$。Euler检查为$4-5+1=0=1-1+0$，与一个连通且留有一个独立回路的复形一致。",
+            "现在真正加入三角面$023$，新$B_2$是两列$(z_1,z_2)$，秩升为2，而$B_1$不变。于是Betti数变为$(1,0,0)$，原来的非零类被新面填掉；Euler检查变为$4-5+2=1$。两种输入的边完全相同，区别只在二维面，说明仅凭图无法确定高维复形的同调。",
+            "已用有理数精确消元独立核算矩阵秩、乘积和核维数，并在F2、F3、F5上重复核算本例，结果相同。这种一致性属于本例，不能推广成同调与系数域无关。"
+          ],
+          "sourceIds": [
+            "A006",
+            "A009"
+          ],
+          "formulas": [
+            "B_1=\\begin{pmatrix}-1&0&0&-1&-1\\\\1&-1&0&0&0\\\\0&1&-1&0&1\\\\0&0&1&1&0\\end{pmatrix},\\qquad B_2=\\begin{pmatrix}1\\\\1\\\\0\\\\0\\\\-1\\end{pmatrix}",
+            "\\dim\\ker B_1=5-3=2,\\qquad \\dim H_1=2-1=1"
+          ]
+        },
+        {
+          "id": "limits",
+          "title": "反例和解释边界",
+          "paragraphs": [
+            "把所有闭链都算成非平凡同调会失败：上例z1是一条非零闭链，却正好是已加入三角面的边界，因而代表零类。若只保存五条边、不加入任何三角面，则β1为2；填一面后为1，填两面后为0。三个答案各自正确，回答的是三个不同输入。",
+            "系数也会改变答案。实射影平面$\\mathbb{RP}^2$的胞腔模型有$d_2=[2]$、$d_1=[0]$：在$\\mathbb Q$上一、二维同调均为零，在$\\mathbb F_2$上均为一维。这是用胞腔模型展示系数依赖的反例，并非把一个面粘贴模型冒充本页的单纯形列表；其单纯剖分应给出相同同调。",
+            "Betti数不是完整分类：一条线段与一个实心三角形的普通Betti数都是(1,0,…) ，但它们并不相同维，也非同胚。单个域的结果还可能丢失整数挠元信息；研究扭结应使用整数链群及Smith标准形等方法。"
+          ],
+          "sourceIds": [
+            "A006",
+            "A007"
+          ]
+        },
+        {
+          "id": "comparison",
+          "title": "什么时候使用其他工具",
+          "paragraphs": [
+            "只有连通性问题时，图搜索或并查集通常已经够用；只有一维图时，可用边数、顶点数和连通分支数计算回路维数。出现高维面后，需要显式扣除边界贡献。要求整数同调的挠元信息时，普通域上高斯消元不够。",
+            "若关注空间随阈值变化的结构，应进一步研究持久同调：除了每层空间，还必须跟踪层间映射。Hatcher适合建立几何和同调定义；Kaczynski等侧重计算与约化；Bredon适合向上同调、乘积与对偶扩展。本轮后两本仅有官方章节定位。"
+          ],
+          "sourceIds": [
+            "A006",
+            "A007",
+            "A008",
+            "A009"
+          ]
+        },
+        {
+          "id": "transfer",
+          "title": "迁移到数据与约束系统",
+          "paragraphs": [
+            "点云分析的可迁移部分是“从关系生成复形，再计算不变量”；需要先选择距离、尺度和复形构造。单个阈值上的非零类未必稳定，不能直接解释为真实对象的结构。网格与图像中的孔洞检测也要说明边界处理、像素连通约定及是否使用立方复形。",
+            "跨向线性代数时，可以研究稀疏边界矩阵的存储、精确秩计算和结构约化；跨向谱方法时，可另行核查离散Hodge表示与所选内积的关系。量子纠错可作为链复形迁移的候选专题，但本轮未读对应原始文献，尚不提供码距、纠错性能或创新性保证。"
+          ],
+          "sourceIds": [
+            "A007",
+            "A009"
+          ],
+          "steps": [
+            "原始数据或约束 → 明确复形与系数 → 计算同调及代表 → 验证建模稳健性 → 再检验领域解释。"
+          ]
+        },
+        {
+          "id": "frontier",
+          "title": "可以继续推进的研究问题",
+          "paragraphs": [
+            "有限复形的同调矩阵算法是成熟基础；当前页面没有声称新的拓扑定理。可研究的是在指定数据规模、稀疏结构和输出需求下如何减少计算，同时保持可检查证书。若只需要Betti数，与需要短代表闭链或全部层间映射，算法目标并不相同。",
+            "下一轮可固定同一组复形，比较不同域、稀疏表示和合法约化对时间、峰值内存、代表质量的影响；再加入尺度扰动和采样重复实验。持久化、最优代表或跨领域应用的前沿程度均需专题检索，本轮不作“尚无人研究”的判断。"
+          ],
+          "sourceIds": [
+            "A007",
+            "A009"
+          ]
+        }
+      ],
+      "reading": [
+        {
+          "sourceId": "A006",
+          "level": "入门",
+          "instruction": "§2.1书页104–106的单纯边界、Lemma 2.1与同调定义；§2.2书页153–154的系数及Example 2.50。本轮已读作者公开章节中的这些段落。"
+        },
+        {
+          "sourceId": "A009",
+          "level": "核心",
+          "instruction": "§3.3，Setup 3.3.2、Algorithm 3.3.4及Proposition 3.3.7，印刷页87–90；本轮读取矩阵秩算法和正确性说明。"
+        },
+        {
+          "sourceId": "A007",
+          "level": "核心",
+          "instruction": "Computing Homology Groups pp.93–141、Chain Maps and Reduction Algorithms pp.143–171；官方目录已核对，书内算法正文未读。"
+        },
+        {
+          "sourceId": "A008",
+          "level": "研究",
+          "instruction": "Homology Theory pp.168–259，再到Cohomology与Products and Duality；作为理论延伸路径，本轮仅目录核对。"
+        }
+      ],
+      "review": {
+        "textRead": true,
+        "hypothesesChecked": true,
+        "exampleRecomputed": true,
+        "scope": "读取Hatcher边界平方为零、同调定义和系数依赖段落，以及Löh矩阵计算算法和正确性说明；独立组装四顶点例子的矩阵，作Q及F2/F3/F5精确秩核算。未进行形式化证明或专家同行评审。",
+        "gaps": [
+          "两本Springer拓扑书仅书目和目录；未据此核验全部约化算法。",
+          "未审点云重建定理、持久同调稳定性或任何量子码结论。",
+          "本例结果不构成算法规模性能测试；未比较不同稀疏实现。"
+        ],
+        "checkedAt": "2026-11-06"
+      },
+      "relatedFamilyIds": [
+        "M002",
+        "M004",
+        "M012"
+      ],
+      "exampleChecks": [
+        {
+          "description": "按边序01,12,23,03,02和递增顶点方向，重建B1及面012的B2",
+          "expected": "B1 B2为4×1零矩阵；rank(B1)=3，rank(B2)=1。"
+        },
+        {
+          "description": "检查z1=(1,1,0,0,-1)，z2=(0,0,1,-1,1)",
+          "expected": "均属于ker(B1)，线性独立；z1生成im(B2)，[z2]生成H1。"
+        },
+        {
+          "description": "加入面023后，把z2作为B2第二列",
+          "expected": "新B2秩为2；Betti由(1,1,0)变为(1,0,0)，Euler数由0变为1。"
+        },
+        {
+          "description": "使用精确分数及分别模2、3、5的高斯消元重复计算",
+          "expected": "Q、F2、F3、F5上本例秩均为(3,1,2)，两阶段Betti数一致。"
+        }
+      ]
+    }
+  ],
+  "books": [
+    {
+      "id": "A001",
+      "type": "book",
+      "title": "Ideals, Varieties, and Algorithms: An Introduction to Computational Algebraic Geometry and Commutative Algebra",
+      "authors": [
+        "David A. Cox",
+        "John Little",
+        "Donal O’Shea"
+      ],
+      "year": "2025",
+      "edition": "5",
+      "publisher": "Springer Cham",
+      "doi": "10.1007/978-3-031-91841-4",
+      "isbn": "978-3-031-91841-4",
+      "url": "https://link.springer.com/book/10.1007/978-3-031-91841-4",
+      "openUrl": "",
+      "level": "核心",
+      "reason": "从多项式计算进入交换代数，兼有消元与机器人章节；适合系统学习主线。",
+      "prerequisites": "线性代数、证明训练；基础抽象代数有帮助。",
+      "limitations": "本轮只读官方目录和介绍，不能把第五版章节当作已审证明。",
+      "locators": [
+        "Gröbner Bases pp.49–119",
+        "Elimination Theory pp.121–175",
+        "Additional Gröbner Basis Algorithms pp.547–600",
+        "Robotics and Automatic Geometric Theorem Proving pp.297–349"
+      ],
+      "supports": [
+        "D002 problem",
+        "D002 comparison",
+        "D002 reading"
+      ],
+      "access": "contents",
+      "readScope": "核对第5版、2025版权年、DOI、电子ISBN及列出的章节页码。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "A002",
+      "type": "book",
+      "title": "Using Algebraic Geometry",
+      "authors": [
+        "David A. Cox",
+        "John Little",
+        "Donal O’Shea"
+      ],
+      "year": "2005",
+      "edition": "2",
+      "publisher": "Springer New York",
+      "doi": "10.1007/b138611",
+      "isbn": "978-0-387-27105-7",
+      "url": "https://link.springer.com/book/10.1007/b138611",
+      "openUrl": "",
+      "level": "研究",
+      "reason": "在已有Gröbner基基础后比较方程求解、结式与局部计算。",
+      "prerequisites": "本科抽象代数；Gröbner基初步。",
+      "limitations": "未读完整章节，工具优劣仅作阅读路线，不作性能结论。",
+      "locators": [
+        "Solving Polynomial Equations pp.26–76",
+        "Resultants pp.77–136",
+        "Computation in Local Rings pp.137–188"
+      ],
+      "supports": [
+        "D002 comparison",
+        "D002 transfer",
+        "D002 reading"
+      ],
+      "access": "contents",
+      "readScope": "核对出版社第二版书目及目录。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "A003",
+      "type": "book",
+      "title": "A Singular Introduction to Commutative Algebra",
+      "authors": [
+        "Gert-Martin Greuel",
+        "Gerhard Pfister"
+      ],
+      "year": "2008（版权年；电子版发布日期2007）",
+      "edition": "2",
+      "publisher": "Springer Berlin, Heidelberg",
+      "doi": "10.1007/978-3-540-73542-7",
+      "isbn": "978-3-540-73542-7",
+      "url": "https://link.springer.com/book/10.1007/978-3-540-73542-7",
+      "openUrl": "",
+      "level": "研究",
+      "reason": "把标准基、局部理论和模纳入算法交换代数，适合了解本页域上全局版本之外的范围。",
+      "prerequisites": "环、理想、模及Gröbner基。",
+      "limitations": "本轮仅官方目录；局部项序与标准基的具体算法尚未审读。",
+      "locators": [
+        "Rings, Ideals and Standard Bases pp.1–108",
+        "Modules pp.109–210",
+        "Homological Algebra pp.377–648"
+      ],
+      "supports": [
+        "D002 limits",
+        "D002 reading"
+      ],
+      "access": "contents",
+      "readScope": "核对第二版、版权和发行日期差异、DOI、电子ISBN及目录。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "A004",
+      "type": "notes",
+      "title": "Lecture notes: Algebra and Polyhedral Geometry",
+      "authors": [
+        "Anders Nedergaard Jensen"
+      ],
+      "year": "2014（5月30日）",
+      "edition": "",
+      "publisher": "Aarhus University",
+      "doi": "",
+      "isbn": "",
+      "url": "https://users-math.au.dk/jensen/teaching/2014AlgebraAndPolyhedralGeometry/notes.pdf",
+      "openUrl": "https://users-math.au.dk/jensen/teaching/2014AlgebraAndPolyhedralGeometry/notes.pdf",
+      "level": "核心",
+      "reason": "公开的判据、算法、终止性及消元证明形成可核对闭环。",
+      "prerequisites": "多项式环、理想与良序。",
+      "limitations": "只读取相关节段落，未审读多面体、热带几何等后续部分。",
+      "locators": [
+        "§1.7 Definition 1.7.1、Theorem 1.7.2、Algorithm 1.7.3",
+        "§1.8 Proposition 1.8.1及Examples 1.8.3–1.8.4"
+      ],
+      "supports": [
+        "D002 statement",
+        "D002 mechanism",
+        "D002 workflow",
+        "D002 limits"
+      ],
+      "access": "excerpt",
+      "readScope": "实际读S多项式定义、判据与证明、Buchberger算法和升链终止性论证、消元命题及投影失败例。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "A005",
+      "type": "notes",
+      "title": "Commutative Algebra and Algebraic Geometry, Chapter 2: Elimination theory",
+      "authors": [
+        "Franz Winkler（课程署名）"
+      ],
+      "year": "2018（课程学期）",
+      "edition": "",
+      "publisher": "RISC, Johannes Kepler University Linz",
+      "doi": "",
+      "isbn": "",
+      "url": "https://www.risc.jku.at/education/courses/ss2018/caag/02-elimination.pdf",
+      "openUrl": "https://www.risc.jku.at/education/courses/ss2018/caag/02-elimination.pdf",
+      "level": "核心",
+      "reason": "提供独立的归约表述和消元性质对照，帮助检查变量顺序约定。",
+      "prerequisites": "域上多项式环、项序与约化。",
+      "limitations": "消元定理的完整证明在讲义中转引文献；本轮只核对其陈述。",
+      "locators": [
+        "Theorem 2.1.8（Buchberger’s Theorem）",
+        "Theorem 2.2.5（Elimination Property of Gröbner Bases）"
+      ],
+      "supports": [
+        "D002 statement",
+        "D002 mechanism",
+        "D002 limits"
+      ],
+      "access": "excerpt",
+      "readScope": "实际读判据和消元性质及相邻说明；另打开课程首页核对教师、2018学期。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "A006",
+      "type": "book",
+      "title": "Algebraic Topology",
+      "authors": [
+        "Allen Hatcher"
+      ],
+      "year": "2002",
+      "edition": "第14次印刷前言：2015",
+      "publisher": "Cambridge University Press",
+      "doi": "",
+      "isbn": "978-0-521-79540-1",
+      "url": "https://assets.cambridge.org/97805217/95401/frontmatter/9780521795401_frontmatter.pdf",
+      "openUrl": "https://pi.math.cornell.edu/~hatcher/AT/ATch2.pdf",
+      "level": "基础",
+      "reason": "用几何直觉建立边界、同调和系数变化的含义；适合给矩阵计算补上解释。",
+      "prerequisites": "线性代数、初等群论、基本拓扑。",
+      "limitations": "出版年按作者书页与Cornell书目著录为2002。所读2015年第14次重印版权页另标©2001及First published 2001，作为版本附注保留；只审第2章相关段落，不声称整本已读。",
+      "locators": [
+        "§2.1 Simplicial Homology，书页104–106，Lemma 2.1",
+        "§2.2 Homology with Coefficients，书页153–154，Example 2.50"
+      ],
+      "supports": [
+        "D003 statement",
+        "D003 mechanism",
+        "D003 limits",
+        "D003 reading"
+      ],
+      "access": "excerpt",
+      "readScope": "实际读取作者公开第2章的边界平方为零、商空间定义及射影空间系数例。书目采用作者书页与Cornell所记2002年；另核对出版社2015年第14次重印版权页的ISBN及2001标记，该标记不代替本条出版年。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "A007",
+      "type": "book",
+      "title": "Computational Homology",
+      "authors": [
+        "Tomasz Kaczynski",
+        "Konstantin Mischaikow",
+        "Marian Mrozek"
+      ],
+      "year": "2004",
+      "edition": "1",
+      "publisher": "Springer New York",
+      "doi": "10.1007/b97315",
+      "isbn": "978-0-387-21597-6",
+      "url": "https://link.springer.com/book/10.1007/b97315",
+      "openUrl": "",
+      "level": "核心",
+      "reason": "以计算同调、链映射和约化连接理论与算法，并涵盖立方复形，适合从单纯算例扩展到图像。",
+      "prerequisites": "线性代数与同调基本定义。",
+      "limitations": "本轮仅目录与出版社说明；不能据此声称已审其中约化算法或应用保证。",
+      "locators": [
+        "Cubical Homology pp.39–92",
+        "Computing Homology Groups pp.93–141",
+        "Chain Maps and Reduction Algorithms pp.143–171"
+      ],
+      "supports": [
+        "D003 comparison",
+        "D003 transfer",
+        "D003 reading"
+      ],
+      "access": "contents",
+      "readScope": "核对作者、2004版权年、DOI、电子ISBN和三章页码。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "A008",
+      "type": "book",
+      "title": "Topology and Geometry",
+      "authors": [
+        "Glen E. Bredon"
+      ],
+      "year": "1993",
+      "edition": "1",
+      "publisher": "Springer New York",
+      "doi": "10.1007/978-1-4757-6848-0",
+      "isbn": "978-0-387-97926-7",
+      "url": "https://link.springer.com/book/10.1007/978-1-4757-6848-0",
+      "openUrl": "",
+      "level": "研究",
+      "reason": "从同调走向上同调、乘积与对偶的理论拓展路径，帮助认识仅有Betti数时的信息边界。",
+      "prerequisites": "基本拓扑、群论与同调。",
+      "limitations": "不是本页矩阵算法证明来源；本轮未读书内正文。",
+      "locators": [
+        "Homology Theory pp.168–259",
+        "Cohomology pp.260–314",
+        "Products and Duality pp.315–429"
+      ],
+      "supports": [
+        "D003 comparison",
+        "D003 reading"
+      ],
+      "access": "contents",
+      "readScope": "核对出版社书目、第一版、硬封ISBN及相关章节目录。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "id": "A009",
+      "type": "notes",
+      "title": "Applied Algebraic Topology: An Introductory Course",
+      "authors": [
+        "Clara Löh"
+      ],
+      "year": "2023（2月14日版本）",
+      "edition": "",
+      "publisher": "Universität Regensburg",
+      "doi": "",
+      "isbn": "",
+      "url": "https://loeh.app.uni-regensburg.de/teaching/aat_ws2223/lecture_notes.pdf",
+      "openUrl": "https://loeh.app.uni-regensburg.de/teaching/aat_ws2223/lecture_notes.pdf",
+      "level": "核心",
+      "reason": "明确把同调计算写成可执行矩阵算法，并区分Betti数、群同构类型和代表生成元。",
+      "prerequisites": "线性代数、链复形；整数版本另需模与Smith标准形。",
+      "limitations": "本页只采用域系数特例；未审该讲义全部整数算法、持久化和重建理论。",
+      "locators": [
+        "§3.3，Setup 3.3.2，书页87",
+        "Algorithm 3.3.4，书页89",
+        "Proposition 3.3.7与正确性说明，书页90"
+      ],
+      "supports": [
+        "D003 statement",
+        "D003 workflow",
+        "D003 comparison",
+        "D003 frontier"
+      ],
+      "access": "excerpt",
+      "readScope": "实际读矩阵秩的Betti计算、相关假设和正确性说明，并核对目录及版本。",
+      "checkedAt": "2026-11-06"
+    }
+  ],
+  "subjectGuides": {
+    "13": {
+      "overview": "交换代数研究交换环、理想和模。本轮新增入口是域上多项式理想的可计算表示：先问成员关系与消元，再进入局部结构、维数和同调工具。一个具体算法样板不覆盖整个MSC13。",
+      "questions": [
+        "某个多项式关系是否属于给定理想？",
+        "如何消去辅助变量而保留全部理想关系？",
+        "局部化、维数或重数怎样揭示方程在一点附近的结构？",
+        "模的关系与自由分解能否揭示更高阶约束？"
+      ],
+      "branches": [
+        "计算交换代数与Gröbner基",
+        "局部环、局部化与完备化",
+        "维数、Hilbert函数与重数",
+        "模、同调代数与自由分解"
+      ],
+      "approaches": [
+        {
+          "name": "Gröbner基与消元",
+          "purpose": "判定理想成员并计算消元理想。",
+          "conditions": "明确系数域、全局项序及精确运算；解集投影须另外核验。",
+          "methodIds": [
+            "M005"
+          ]
+        },
+        {
+          "name": "局部到整体",
+          "purpose": "把局部环或局部数据与整体代数对象联系起来。",
+          "conditions": "指定局部化对象、覆盖和相容性，不能默认所有局部可解性都能整体化。",
+          "methodIds": [
+            "M007"
+          ]
+        },
+        {
+          "name": "同调与自由分解",
+          "purpose": "研究模之间的关系及关系之间的关系。",
+          "conditions": "需选环、模及适用的同调框架，本轮只作后续入口。",
+          "methodIds": [
+            "M006"
+          ]
+        },
+        {
+          "name": "多项式非负证书",
+          "purpose": "把实多项式约束连接到优化证书。",
+          "conditions": "区分复代数理想与实非负问题；非负不等于平方和。",
+          "methodIds": [
+            "M026"
+          ]
+        }
+      ],
+      "reading": [
+        {
+          "title": "Ideals, Varieties, and Algorithms，第5版",
+          "url": "https://link.springer.com/book/10.1007/978-3-031-91841-4",
+          "locator": "Gröbner Bases pp.49–119；Elimination Theory pp.121–175",
+          "note": "本轮核对官方目录；相关数学正文使用Jensen公开讲义交叉核对。"
+        },
+        {
+          "title": "Algebra and Polyhedral Geometry",
+          "url": "https://users-math.au.dk/jensen/teaching/2014AlgebraAndPolyhedralGeometry/notes.pdf",
+          "locator": "§1.7–1.8",
+          "note": "已读判据、算法和消元相关正文。"
+        },
+        {
+          "title": "A Singular Introduction to Commutative Algebra",
+          "url": "https://link.springer.com/book/10.1007/978-3-540-73542-7",
+          "locator": "Rings, Ideals and Standard Bases；Modules",
+          "note": "研究延伸，当前仅目录定位。"
+        }
+      ],
+      "boundaries": "本批次只完成一个域上全局算法样板。局部标准基、整数系数、根理想、准素分解和复杂度尚未系统审读。",
+      "next": [
+        "补一组不同项序的同理想算例及证书比较。",
+        "研究带参数消元中的分支丢失问题。",
+        "按正文核对局部标准基与全局Gröbner基的差异。"
+      ],
+      "prerequisites": [
+        "线性代数",
+        "域、多项式环和理想",
+        "严格证明与算法终止性"
+      ],
+      "progress": "Buchberger与消元定理是成熟基础；本轮贡献是可检索组织和算例复核。结构化问题上的算法优势与跨领域新颖性仍待专题验证。"
+    },
+    "55": {
+      "overview": "代数拓扑以同调、上同调和同伦等代数工具研究空间与映射。本轮从有限单纯复形的边界矩阵入手，展示如何将几何对象线性化以及这种线性化会丢失什么信息。",
+      "questions": [
+        "空间有多少连通分支和独立同调类？",
+        "一个闭链是否已经是某个高维链的边界？",
+        "改变系数、填入新面或改变尺度后，哪些类保留？",
+        "同调相同的空间还能由什么更精细的不变量区分？"
+      ],
+      "branches": [
+        "单纯、奇异与胞腔同调",
+        "上同调、杯积与对偶",
+        "基本群与高阶同伦",
+        "计算拓扑与持久同调"
+      ],
+      "approaches": [
+        {
+          "name": "链复形与同调矩阵",
+          "purpose": "在有限复形上计算域系数Betti数及代表。",
+          "conditions": "复形对取面封闭，明确方向、系数域和相邻维的面。",
+          "methodIds": [
+            "M006"
+          ]
+        },
+        {
+          "name": "不变量与归纳核查",
+          "purpose": "利用边界平方为零等不变量检查构造和算法。",
+          "conditions": "必须证明操作保留相应结构，数值吻合本身不足。",
+          "methodIds": [
+            "M002"
+          ]
+        },
+        {
+          "name": "谱方法的后续联系",
+          "purpose": "研究同调与适当离散算子的核之间的联系。",
+          "conditions": "需另查离散Hodge结论、内积和系数条件，本轮未审。",
+          "methodIds": [
+            "M012"
+          ]
+        },
+        {
+          "name": "对称性方法",
+          "purpose": "利用群作用理解空间或链空间的分解。",
+          "conditions": "作用须与边界映射相容；本轮仅给迁移入口。",
+          "methodIds": [
+            "M004"
+          ]
+        }
+      ],
+      "reading": [
+        {
+          "title": "Hatcher, Algebraic Topology",
+          "url": "https://pi.math.cornell.edu/~hatcher/AT/ATch2.pdf",
+          "locator": "§2.1，pp.104–106；§2.2，pp.153–154",
+          "note": "作者公开正文，已读边界、同调与系数变化相关段落。"
+        },
+        {
+          "title": "Computational Homology",
+          "url": "https://link.springer.com/book/10.1007/b97315",
+          "locator": "Computing Homology Groups pp.93–141",
+          "note": "官方目录已核对；未读该章全文。"
+        },
+        {
+          "title": "Löh, Applied Algebraic Topology",
+          "url": "https://loeh.app.uni-regensburg.de/teaching/aat_ws2223/lecture_notes.pdf",
+          "locator": "§3.3，Algorithm 3.3.4与Proposition 3.3.7",
+          "note": "已读矩阵计算与正确性说明。"
+        }
+      ],
+      "boundaries": "同调不是空间的完整分类。此批次未系统覆盖上同调乘法、谱序列、高阶同伦、数据重建或持久稳定性。",
+      "next": [
+        "增加含挠元的整数同调与多系数比较样例。",
+        "补过滤复形的层间映射，说明Betti曲线与条形码的区别。",
+        "设计同一复形的稀疏矩阵与合法链约化基线。"
+      ],
+      "prerequisites": [
+        "线性代数与商空间",
+        "图、单纯形和基本拓扑",
+        "链复形及精确算术"
+      ],
+      "progress": "单纯同调与矩阵秩公式是成熟基础；数据应用的可靠性来自额外建模和稳定性假设，不能由单次Betti数计算推出。"
+    }
+  },
+  "retrievalLog": [
+    {
+      "url": "https://link.springer.com/book/10.1007/978-3-031-91841-4",
+      "status": "read",
+      "detail": "核对第5版、2025版权年、DOI、电子ISBN及列出的章节页码。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://link.springer.com/book/10.1007/b138611",
+      "status": "read",
+      "detail": "核对出版社第二版书目及目录。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://link.springer.com/book/10.1007/978-3-540-73542-7",
+      "status": "read",
+      "detail": "核对第二版、版权和发行日期差异、DOI、电子ISBN及目录。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://users-math.au.dk/jensen/teaching/2014AlgebraAndPolyhedralGeometry/notes.pdf",
+      "status": "read",
+      "detail": "实际读S多项式定义、判据与证明、Buchberger算法和升链终止性论证、消元命题及投影失败例。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://www.risc.jku.at/education/courses/ss2018/caag/02-elimination.pdf",
+      "status": "read",
+      "detail": "实际读判据和消元性质及相邻说明；另打开课程首页核对教师、2018学期。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://assets.cambridge.org/97805217/95401/frontmatter/9780521795401_frontmatter.pdf",
+      "status": "read",
+      "detail": "打开出版社前言核对ISBN和目录；实际读作者公开第2章的边界平方为零、商空间定义及射影空间系数例。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://link.springer.com/book/10.1007/b97315",
+      "status": "read",
+      "detail": "核对作者、2004版权年、DOI、电子ISBN和三章页码。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://link.springer.com/book/10.1007/978-1-4757-6848-0",
+      "status": "read",
+      "detail": "核对出版社书目、第一版、硬封ISBN及相关章节目录。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://loeh.app.uni-regensburg.de/teaching/aat_ws2223/lecture_notes.pdf",
+      "status": "read",
+      "detail": "实际读矩阵秩的Betti计算、相关假设和正确性说明，并核对目录及版本。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://pi.math.cornell.edu/~hatcher/AT/ATch2.pdf",
+      "status": "read",
+      "detail": "读取作者第2章指定段落；来源A006的内容核验。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://www3.risc.jku.at/education/courses/ss2018/caag/",
+      "status": "read",
+      "detail": "核对Franz Winkler课程署名与2018学期。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://doi.org/10.1090/mbk/069",
+      "status": "failed",
+      "detail": "AMS直连返回403；检索索引出现书目目录，但未作为已读正文来源。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://www.ams.org/books/mbk/069/",
+      "status": "failed",
+      "detail": "官方页面返回403；未绕过访问控制。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://www.ams.org/publications/authors/books/postpub/mbk-69",
+      "status": "failed",
+      "detail": "官方补充入口返回403；未取得书内正文。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://scholars.duke.edu/publication/851239",
+      "status": "read",
+      "detail": "仅核对Edelsbrunner–Harer的2010年AMS书目信息；本批次未将它登记为已读教材。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://pi.math.cornell.edu/~hatcher/AT/ATpage.html",
+      "status": "read",
+      "detail": "作者书页明确印刷出版于2002年；在线版按作者授权免费提供并持续修订。与出版社重印前言2001标记有差异，来源A006如实保留。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://math.cornell.edu/allen-hatcher",
+      "status": "read",
+      "detail": "Cornell教师书目同样标2002年。",
+      "checkedAt": "2026-11-06"
+    },
+    {
+      "url": "https://assets.cambridge.org/97805217/95401/frontmatter/9780521795401_frontmatter.pdf",
+      "status": "retry-failed",
+      "detail": "此前已读前言；末轮重开返回503，搜索索引仍显示2001及2015年第14次印刷；未据失败补充正文证据。",
+      "checkedAt": "2026-11-06"
+    }
+  ]
+}

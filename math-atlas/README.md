@@ -1,6 +1,6 @@
 # 数学方法地图：维护说明
 
-公开网站 https://xinyu-joy.github.io/math-methods-atlas/ 。当前内容版本 v0.2，日期 2026-11-03。
+公开网站 https://xinyu-joy.github.io/math-methods-atlas/ 。当前内容版本 v0.3，日期 2026-11-06。
 
 ## 内容文件
 
@@ -25,9 +25,10 @@
 
 ## 构建与检查
 
-需要 Node.js 22 或更新版本，无第三方依赖。
+需要 Node.js 22.12 或更新版本。构建时使用锁定版本的 KaTeX，生成 HTML 与 MathML，样式、字体和许可证随静态站点分发，读者离线也可阅读公式。
 
 ```sh
+npm ci --ignore-scripts
 npm run build
 npm test
 npm run dev
@@ -46,3 +47,20 @@ npm run dev
 ## 来源
 
 学科分类由 Mathematical Reviews 与 zbMATH 的 MSC2020 提供，原分类资料标明 CC BY-NC-SA，具体条款以官方说明为准。各导读保留原始来源与实际核对范围。不转载专著或论文全文。
+
+## v0.3 深度批次
+
+- `src/deep/*.json`：六个具体方法 D001–D006、核心书籍与补充来源、七个新增学科导读、实际检索记录。根对象为 methods、books（兼含 notes/paper）、subjectGuides、retrievalLog。
+- `src/deep-catalog.mjs`：整合批次，分别统计具体方法、方法家族、书籍与实际阅读。
+- `scripts/deep-pages.mjs`：生成具体方法页、书目来源页、检索入口和覆盖矩阵。
+- `scripts/verify-deep-examples.mjs`：精确有理数、多项式恒等式、矩阵秩、联合转移核、有限元组装与积分检查；不证明一般定理。
+- `research/batch03-audit.json`：内容审计、样板选择依据、书目缺口与下一批可执行任务。
+- `research/batch03-contract.json`：内容字段约定；不是完成状态清单。
+
+原有 M 方法家族链接不变。D 方法路径使用 `methods/<family-id>/<stable-slug>/index.html`，来源为 `library/<source-id>/index.html`；发布后不复用 ID 或修改 slug。一个来源版本单独建记录，其阅读位置可以有多段；不同版本不能混用页码。新增条目后须检查重复 DOI／版本与所有引用。
+
+新页面支持 $...$ 行内公式和独立 formulas 数组。文字由模板转义，公式在构建时严格解析；不信任任意 HTML。关键词按中英文、别名、定义及正文建立索引，书目按编号、作者、版本信息及阅读范围检索，筛选结果保存在 URL。
+
+本批补 MSC 13、47、55、60、65、81、90 导读，其余学科按覆盖矩阵保留待补。不能因为方法关联数增加而把学科标为研究完成。目录与章节摘要使用 contents；仅已读正文片段使用 excerpt；chapter 限定为确实完整读过的相关章节。复算、假设检查和外部同行审阅是独立字段。
+
+读者从 `coverage/index.html` 下载本批来源、具体方法、检索日志、审计与例算记录。`downloads/atlas.json` 同时保存历史家族数据和新增具体方法。历史 Excel 仍是 v0.1，不声称已同步。站点不分发书籍或论文全文。
